@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Persistency Times</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --paper: #F3EFE6;
+    --paper-deep: #EAE4D6;
+    --ink: #1A1A18;
+    --ink-soft: #4A4A44;
+    --rule: #1A1A18;
+    --rule-light: #C9C1AE;
+    --red: #A6192E;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper-deep);
+    color: var(--ink);
+    font-family: 'Source Serif 4', Georgia, serif;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    background: var(--paper);
+    padding: 28px 36px 60px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.08);
+  }
+
+  .masthead-top {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-bottom: 8px;
+  }
+
+  .masthead { text-align: center; padding: 6px 0 10px; }
+
+  .masthead h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 58px;
+    margin: 0;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+  }
+
+  .masthead .tagline {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  .rule-thick { border: none; border-top: 4px solid var(--rule); margin: 10px 0 3px; }
+  .rule-thin { border: none; border-top: 1px solid var(--rule); margin: 0 0 14px; }
+
+  .dummy-banner {
+    background: var(--red);
+    color: #fff;
+    font-family: 'Oswald', sans-serif;
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+    text-align: center;
+    padding: 6px;
+    margin-bottom: 18px;
+  }
+
+  .upload-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 12px 18px;
+    margin-bottom: 20px;
+  }
+
+  .upload-btn {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 9px 18px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .upload-hint {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+
+  .upload-status {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #1E6B3E;
+  }
+  .upload-status.error { color: var(--red); }
+
+  .tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-bottom: 22px;
+    border-bottom: 3px solid var(--rule);
+  }
+
+  .tab-btn {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    background: var(--paper-deep);
+    color: var(--ink-soft);
+    border: 1px solid var(--rule-light);
+    border-bottom: none;
+    padding: 10px 16px;
+    cursor: pointer;
+  }
+
+  .tab-btn:hover { background: #fff; color: var(--ink); }
+
+  .tab-btn.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .tab-btn.overall-tab { border-right: 2px solid var(--rule); }
+
+  @media (max-width: 700px) {
+    .tab-bar { overflow-x: auto; flex-wrap: nowrap; }
+    .tab-btn { white-space: nowrap; }
+  }
+
+  .section-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--rule);
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+  }
+
+
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--rule);
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+  }
+
+  .section-note {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+  }
+
+  /* ---------- Index table (front page) ---------- */
+  table.index-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  table.index-table.grouped {
+    min-width: 900px;
+  }
+
+  table.index-table.grouped thead th.group-13m,
+  table.index-table.grouped thead th.group-25m {
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--rule-light);
+  }
+
+  table.index-table.grouped thead th.group-13m { border-right: 2px solid var(--rule); }
+
+  table.index-table.grouped thead th.sub {
+    font-size: 9.5px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  table.index-table.grouped tbody td {
+    padding: 10px 8px;
+    font-size: 12.5px;
+  }
+
+  table.index-table.grouped tbody td.num {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  table.index-table.grouped tbody td:nth-child(6) { border-right: 2px solid var(--rule); }
+
+  table.index-table thead th {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 2px solid var(--rule);
+  }
+
+  table.index-table thead th.num { text-align: right; }
+
+  table.index-table tbody tr {
+    cursor: pointer;
+    border-bottom: 1px solid var(--rule-light);
+  }
+
+  table.index-table tbody tr:hover { background: var(--paper-deep); }
+
+  table.index-table td {
+    padding: 12px 10px;
+    vertical-align: middle;
+  }
+
+  table.index-table td.num {
+    text-align: right;
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .idx-channel {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .idx-headline {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+    max-width: 360px;
+  }
+
+  .status-tag {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid currentColor;
+    display: inline-block;
+  }
+  .status-tag.risk { color: var(--red); }
+  .status-tag.watch { color: #8A6D00; }
+  .status-tag.steady { color: var(--ink-soft); }
+  .status-tag.strong { color: #1E6B3E; }
+
+  .idx-bar-bg {
+    background: var(--paper-deep);
+    height: 5px;
+    width: 90px;
+    border: 1px solid var(--rule);
+    margin-left: auto;
+    margin-top: 4px;
+  }
+  .idx-bar-fill { height: 100%; background: var(--ink); }
+
+  footer {
+    margin-top: 30px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+    text-align: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+
+  /* ---------- Individual article view ---------- */
+  .back-link {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink);
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .article {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 32px;
+  }
+
+  .kicker {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+
+  .article h2 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800;
+    font-size: 38px;
+    line-height: 1.12;
+    margin: 0 0 12px;
+  }
+
+  .byline {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--rule-light);
+    padding-bottom: 10px;
+  }
+
+  .lede {
+    font-size: 17px;
+    line-height: 1.6;
+    margin: 0 0 16px;
+  }
+
+  .lede::first-letter {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px;
+    font-weight: 900;
+    float: left;
+    line-height: 0.8;
+    margin: 6px 8px 0 0;
+  }
+
+  .trend-btn {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 11px 22px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .stat-box {
+    border: 1px solid var(--rule);
+    padding: 18px 20px;
+    background: #fff;
+    align-self: start;
+  }
+
+  .stat-box-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--rule);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+
+  .stat-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'Oswald', sans-serif;
+    padding: 6px 0;
+    border-bottom: 1px dotted var(--rule-light);
+    font-size: 13px;
+  }
+  .stat-line:last-of-type { border-bottom: none; }
+  .stat-line .label { color: var(--ink-soft); }
+  .stat-line .value { font-weight: 700; font-size: 16px; }
+
+  .target-bar-bg { background: var(--paper-deep); height: 6px; margin-top: 10px; border: 1px solid var(--rule); }
+  .target-bar-fill { height: 100%; background: var(--ink); }
+
+  .initiatives-box { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--rule-light); }
+  .initiatives-box .stat-box-title { border-bottom: none; margin-bottom: 6px; padding-bottom: 0; }
+  .initiatives-box ul { margin: 0; padding-left: 16px; font-size: 12.5px; line-height: 1.6; font-family: 'Source Serif 4', Georgia, serif; }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20,18,14,0.6);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 999;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    max-width: 720px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 26px 30px 30px;
+  }
+
+  .modal-kicker {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--red);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .close-btn {
+    background: none;
+    border: 1px solid var(--rule);
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+
+  .modal h2 { font-family: 'Playfair Display', serif; font-size: 28px; margin: 6px 0 4px; }
+
+  .figure-caption {
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+    border-top: 1px solid var(--rule-light);
+    padding-top: 8px;
+  }
+
+  table.rolling-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+  }
+  table.rolling-table th, table.rolling-table td {
+    padding: 6px 6px;
+    text-align: center;
+    border-bottom: 1px solid var(--rule-light);
+  }
+  table.rolling-table th { border-bottom: 2px solid var(--rule); font-weight: 600; }
+
+  .overall-block {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    border: 1px solid var(--rule);
+    background: #fff;
+  }
+
+  .overall-group {
+    display: grid;
+    grid-template-columns: 90px 1fr 1fr 1fr 1fr;
+    border-bottom: 1px solid var(--rule-light);
+  }
+  .overall-group:last-of-type { border-bottom: none; }
+
+  .overall-group-label {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--paper-deep);
+    border-right: 1px solid var(--rule-light);
+  }
+
+  .overall-stat {
+    padding: 16px 18px;
+    border-right: 1px solid var(--rule-light);
+  }
+  .overall-stat:last-child { border-right: none; }
+
+  .overall-stat .label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .overall-stat .value {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800;
+    font-size: 28px;
+  }
+
+  .overall-trend-btn {
+    grid-column: 1 / -1;
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+  }
+
+  .overall-initiatives-box {
+    border: 1px solid var(--rule);
+    background: #fff;
+    padding: 16px 20px;
+  }
+
+  .overall-initiatives-box ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    line-height: 1.8;
+    column-count: 2;
+    column-gap: 28px;
+  }
+
+  .overall-initiatives-box li span.src {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  @media (max-width: 700px) {
+    .overall-group { grid-template-columns: 1fr 1fr; }
+    .overall-group-label { grid-column: 1 / -1; }
+    .overall-initiatives-box ul { column-count: 1; }
+  }
+
+  @media (max-width: 900px) {
+    .article { grid-template-columns: 1fr; }
+    .masthead h1 { font-size: 38px; }
+    .page { padding: 20px 18px 40px; }
+    table.index-table .idx-headline { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="masthead-top">
+    <span id="today-date"></span>
+    <span>MTD Edition &middot; Issue No. 1</span>
+  </div>
+
+  <div class="masthead" id="masthead-click">
+    <h1>Persistency Times</h1>
+    <div class="tagline">Channel Performance &amp; Renewal Report</div>
+  </div>
+  <hr class="rule-thick">
+  <hr class="rule-thin">
+
+  <!-- ===== TAB BAR (Overall + one per channel, built dynamically) ===== -->
+  <div class="tab-bar" id="tab-bar"></div>
+
+  <!-- ===== OVERALL PANEL ===== -->
+  <div id="overall-view">
+    <div class="table-scroll">
+    <table class="index-table grouped">
+      <thead>
+        <tr>
+          <th rowspan="2">Channel</th>
+          <th rowspan="2">Status</th>
+          <th colspan="4" class="group-13m">13M</th>
+          <th colspan="4" class="group-25m">25M</th>
+        </tr>
+        <tr>
+          <th class="num sub">Base</th>
+          <th class="num sub">13M %</th>
+          <th class="num sub">Target</th>
+          <th class="num sub">MTD Collection</th>
+          <th class="num sub">Base</th>
+          <th class="num sub">25M %</th>
+          <th class="num sub">Target</th>
+          <th class="num sub">MTD Collection</th>
+        </tr>
+      </thead>
+      <tbody id="index-body"></tbody>
+    </table>
+    </div>
+
+    <div class="section-label" style="margin-top:32px;">Overall — All Channels Combined</div>
+    <div class="section-note">Book-weighted persistency across the full portfolio</div>
+    <div class="overall-block" id="overall-block"></div>
+
+    <div class="section-label" style="margin-top:32px;">Overall Initiatives — This Month, Across All Channels</div>
+    <div class="section-note">Consolidated from every channel's individual initiatives</div>
+    <div id="overall-initiatives"></div>
+
+    <footer>Persistency Times &middot; Internal Use Only &middot; Click a channel tab above for its full editorial report and M0&ndash;M12 rolling record</footer>
+  </div>
+
+  <!-- ===== INDIVIDUAL CHANNEL PANEL ===== -->
+  <div id="article-view" style="display:none;">
+    <div id="article-container"></div>
+  </div>
+
+  <div class="dummy-banner" id="data-banner" style="margin-top:30px;">⚠ SAMPLE DATA EDITION — upload your Excel file below to replace with actuals</div>
+
+  <div class="upload-bar">
+    <label for="excel-upload" class="upload-btn">📁 Upload Excel Data</label>
+    <input type="file" id="excel-upload" accept=".xlsx,.xls" style="display:none;">
+    <span class="upload-hint">Sheets "Cases" + "Channel Info" &middot; File stays in your browser, never uploaded anywhere</span>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-kicker">
+      <span>Rolling Persistency Record</span>
+      <button class="close-btn" id="close-modal">✕</button>
+    </div>
+    <h2 id="modal-title"></h2>
+    <canvas id="trend-chart" height="220"></canvas>
+    <div class="figure-caption" id="fig-caption"></div>
+    <table class="rolling-table" id="rolling-table"></table>
+  </div>
+</div>
+
+<script>
+  const MONTHS = ['M12','M11','M10','M9','M8','M7','M6','M5','M4','M3','M2','M1','M0'];
+
+  // ============================================================
+  // DUMMY DATA — shown until a real Excel file is uploaded. book/collection/target in Rs Crores.
+  // ============================================================
+  const DUMMY_CHANNELS = {
+    'PO External': {
+      book13: 900, persistency13: 73, book25: 550, persistency25: 61,
+      target13: 110, mtd13: 75, target25: 70, mtd25: 45,
+      kicker: 'At Risk', statusClass: 'risk',
+      headline: 'PO External Persistency Falls to 61%, Lowest on Record',
+      lede: 'PO External policies show the steepest drop-off of any channel this edition, with 25-month persistency at just 61% — a signal that onboarding quality may need review.',
+      initiatives: ['Agent certification refresher', 'Reduced early-lapse incentive clawback'],
+      rolling13: [76, 75, 74, 75, 73, 74, 72, 73, 71, 72, 74, 73, 73],
+      rolling25: [65, 64, 63, 64, 62, 63, 61, 62, 60, 61, 63, 62, 61],
+    },
+    'IM': {
+      book13: 2100, persistency13: 76, book25: 1400, persistency25: 65,
+      target13: 250, mtd13: 185, target25: 170, mtd25: 125,
+      kicker: 'At Risk', statusClass: 'risk',
+      headline: 'IM Channel Persistency Slips to 65%, Raising Renewal Alarm',
+      lede: 'The IM channel\u2019s 25-month persistency has fallen to 65% as MTD collection continues to trail behind the renewal target.',
+      initiatives: ['App push notification reminders', 'Auto-debit enrollment drive'],
+      rolling13: [74, 73, 75, 74, 76, 75, 77, 76, 75, 77, 76, 77, 76],
+      rolling25: [63, 64, 63, 65, 64, 63, 65, 64, 66, 65, 64, 66, 65],
+    },
+    'RPD': {
+      book13: 3300, persistency13: 79, book25: 2200, persistency25: 68,
+      target13: 360, mtd13: 290, target25: 240, mtd25: 190,
+      kicker: 'Watch List', statusClass: 'watch',
+      headline: 'RPD Book Shows Strain as 25-Month Figures Dip',
+      lede: 'RPD-sourced policies are holding a 79% 13-month rate, but the 68% 25-month figure suggests early gains are not translating into second-year renewals.',
+      initiatives: ['Payout linked to persistency', 'Joint field visits for high-risk lapses'],
+      rolling13: [77, 76, 78, 77, 79, 78, 80, 79, 78, 80, 79, 80, 79],
+      rolling25: [66, 65, 67, 66, 68, 67, 69, 68, 67, 69, 68, 69, 68],
+    },
+    'Agency': {
+      book13: 4500, persistency13: 82, book25: 3200, persistency25: 71,
+      target13: 460, mtd13: 360, target25: 340, mtd25: 260,
+      kicker: 'Watch List', statusClass: 'watch',
+      headline: 'Agency Holds Steady Despite Soft 25-Month Showing',
+      lede: 'The largest channel by book size, Agency remains resilient at 82% 13-month persistency, though the 71% 25-month print keeps it on the watch list.',
+      initiatives: ['Weekly reminder calls to lapsed customers', 'Agent incentive program for Q3 renewals', 'Digital payment link campaign'],
+      rolling13: [79, 80, 79, 81, 80, 82, 81, 83, 82, 81, 83, 82, 82],
+      rolling25: [68, 69, 68, 70, 69, 70, 71, 70, 72, 71, 70, 72, 71],
+    },
+    'DD': {
+      book13: 2700, persistency13: 85, book25: 1900, persistency25: 77,
+      target13: 275, mtd13: 230, target25: 195, mtd25: 160,
+      kicker: 'Steady', statusClass: 'steady',
+      headline: 'DD Stays the Course at 77%',
+      lede: 'DD channel renewals continue at a stable pace, with 25-month persistency holding at 77% this month.',
+      initiatives: ['HR desk renewal camps', 'Bulk auto-renewal follow-up'],
+      rolling13: [82, 83, 83, 84, 84, 85, 84, 86, 85, 84, 86, 85, 85],
+      rolling25: [74, 75, 75, 76, 76, 77, 76, 78, 77, 76, 78, 77, 77],
+    },
+    'BANCA': {
+      book13: 6800, persistency13: 88, book25: 5100, persistency25: 79,
+      target13: 655, mtd13: 565, target25: 495, mtd25: 425,
+      kicker: 'Strong Performer', statusClass: 'strong',
+      headline: 'BANCA Nears Target With Strong Renewal Pace',
+      lede: 'BANCA leads on book size and is closing in on its renewal target, with persistency figures among the healthiest on the desk this month.',
+      initiatives: ['Branch staff renewal training', 'SMS + email reminder automation', 'Priority servicing for high-value policies'],
+      rolling13: [85, 86, 86, 87, 87, 88, 87, 89, 88, 87, 88, 89, 88],
+      rolling25: [76, 76, 77, 77, 78, 78, 77, 79, 78, 79, 78, 80, 79],
+    },
+    'CAB': {
+      book13: 1500, persistency13: 91, book25: 900, persistency25: 84,
+      target13: 160, mtd13: 150, target25: 100, mtd25: 90,
+      kicker: 'Strong Performer', statusClass: 'strong',
+      headline: 'CAB Leads the Pack, Persistency Tops 84%',
+      lede: 'The smallest book by size but among the best performers by rate: CAB posts strong 13- and 25-month persistency this edition.',
+      initiatives: ['One-click renewal via app', 'WhatsApp payment reminders'],
+      rolling13: [88, 89, 89, 90, 90, 91, 90, 92, 91, 90, 92, 91, 91],
+      rolling25: [81, 82, 82, 83, 83, 84, 83, 85, 84, 83, 85, 84, 84],
+    },
+    'Online Sales': {
+      book13: 5200, persistency13: 93, book25: 4400, persistency25: 87,
+      target13: 460, mtd13: 440, target25: 390, mtd25: 370,
+      kicker: 'Strong Performer', statusClass: 'strong',
+      headline: 'Online Sales Tops the League Table at 87% Persistency',
+      lede: 'Online-sourced policies remain the most reliable book on the desk, posting the highest persistency of any channel this month.',
+      initiatives: ['Auto-renewal reminder emails', 'One-click UPI renewal link'],
+      rolling13: [90, 91, 91, 92, 92, 93, 92, 94, 93, 92, 94, 93, 93],
+      rolling25: [84, 85, 85, 86, 86, 87, 86, 88, 87, 86, 88, 87, 87],
+    },
+    'TAC': {
+      book13: 1200, persistency13: 80, book25: 800, persistency25: 70,
+      target13: 145, mtd13: 115, target25: 95, mtd25: 75,
+      kicker: 'Watch List', statusClass: 'watch',
+      headline: 'TAC Holds at 70%, Middle of the Pack',
+      lede: 'TAC channel persistency sits at 70% for the 25-month bucket, tracking close to the portfolio average.',
+      initiatives: ['Telecalling script refresh', 'Callback scheduling for missed connects'],
+      rolling13: [78, 79, 78, 80, 79, 80, 79, 81, 80, 79, 81, 80, 80],
+      rolling25: [68, 69, 68, 70, 69, 70, 69, 71, 70, 69, 71, 70, 70],
+    },
+  };
+
+  let CHANNELS = DUMMY_CHANNELS;
+
+  function fmtRs(v) { return '\u20B9' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Cr'; }
+
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  // Build a kicker/headline/lede automatically from the numbers (used for uploaded real data)
+  function buildNarrative(name, d) {
+    let kicker, statusClass;
+    if (d.persistency25 < 70) { kicker = 'At Risk'; statusClass = 'risk'; }
+    else if (d.persistency25 < 80) { kicker = 'Watch List'; statusClass = 'watch'; }
+    else if (d.persistency25 < 88) { kicker = 'Steady'; statusClass = 'steady'; }
+    else { kicker = 'Strong Performer'; statusClass = 'strong'; }
+
+    const headline = `${name} ${kicker === 'At Risk' ? 'Persistency Falls to' : kicker === 'Strong Performer' ? 'Leads With' : 'Holds at'} ${d.persistency25}% (25M)`;
+    const lede = `${name} reports ${d.persistency13}% 13-month and ${d.persistency25}% 25-month persistency this edition, with combined MTD collection of ${fmtRs((d.mtd13 || 0) + (d.mtd25 || 0))} against a combined target of ${fmtRs((d.target13 || 0) + (d.target25 || 0))}.`;
+
+    return { kicker, statusClass, headline, lede };
+  }
+
+  // ---------- Render everything (called on load, and again after Excel upload) ----------
+  // Fixed display order for channels — any channel not in this list is appended
+  // at the end (in whatever order it appears), so new/uploaded channel names
+  // never get lost even if they don't match this list.
+  // Lowercase, so matching is case-insensitive (e.g. "Banca" and "BANCA" both hit the same slot).
+  // Includes known aliases (PO / PO External) so either spelling lands in the same position.
+  const CHANNEL_ORDER = [
+    'agency', 'variable agency', 'dd', 'po', 'po external', 'im',
+    'rpd', 'cab', 'banca', 'digital', 'online sales', 'tac',
+  ];
+
+  // Channel owners — shown in brackets next to the channel name.
+  // Only for these six channels; any other channel (CAB, Online Sales, TAC, IM...) shows no owner.
+  const CHANNEL_OWNERS = {
+    'agency': 'Ajay Dubey',
+    'dd': 'Smir Kamdar',
+    'po': 'Souvik Chakraborty',
+    'po external': 'Souvik Chakraborty',
+    'variable agency': 'Aarti Gupta',
+    'banca': 'Saleem Momin',
+    'rpd': 'Rajeev Sinha',
+  };
+
+  function channelDisplayName(name) {
+    const owner = CHANNEL_OWNERS[name.trim().toLowerCase()];
+    return owner ? `${name} (${owner})` : name;
+  }
+
+  function orderedChannelNames() {
+    const names = Object.keys(CHANNELS);
+    // Any channel not in CHANNEL_ORDER falls back to alphabetical order — fixed and
+    // repeatable every time, never dependent on the row order inside the uploaded Excel.
+    const alphabetical = names.slice().sort((a, b) => a.localeCompare(b));
+    return names.slice().sort((a, b) => {
+      let ia = CHANNEL_ORDER.indexOf(a.trim().toLowerCase());
+      let ib = CHANNEL_ORDER.indexOf(b.trim().toLowerCase());
+      if (ia === -1) ia = CHANNEL_ORDER.length + alphabetical.indexOf(a);
+      if (ib === -1) ib = CHANNEL_ORDER.length + alphabetical.indexOf(b);
+      return ia - ib;
+    });
+  }
+
+  function renderAll() {
+    // ---------- Tab bar (Overall first, then one tab per channel) ----------
+    const tabBar = document.getElementById('tab-bar');
+    tabBar.innerHTML = '';
+
+    const overallTab = document.createElement('button');
+    overallTab.className = 'tab-btn overall-tab active';
+    overallTab.textContent = 'Overall';
+    overallTab.addEventListener('click', () => switchTab('__overall__'));
+    tabBar.appendChild(overallTab);
+
+    orderedChannelNames().forEach(name => {
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn';
+      btn.textContent = channelDisplayName(name);
+      btn.dataset.channel = name;
+      btn.addEventListener('click', () => switchTab(name));
+      tabBar.appendChild(btn);
+    });
+
+    // ---------- Channel table ----------
+    const indexBody = document.getElementById('index-body');
+    indexBody.innerHTML = '';
+
+    orderedChannelNames().forEach(name => {
+      const d = CHANNELS[name];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <div class="idx-channel">${channelDisplayName(name)}</div>
+        </td>
+        <td><span class="status-tag ${d.statusClass}">${d.kicker}</span></td>
+        <td class="num">${fmtRs(d.book13)}</td>
+        <td class="num">${d.persistency13}%</td>
+        <td class="num">${fmtRs(d.target13)}</td>
+        <td class="num">${fmtRs(d.mtd13)}</td>
+        <td class="num">${fmtRs(d.book25)}</td>
+        <td class="num">${d.persistency25}%</td>
+        <td class="num">${fmtRs(d.target25)}</td>
+        <td class="num">${fmtRs(d.mtd25)}</td>
+      `;
+      tr.addEventListener('click', () => switchTab(name));
+      indexBody.appendChild(tr);
+    });
+
+    // ---------- Overall (all channels combined) ----------
+    const allEntries = Object.entries(CHANNELS);
+
+    const overall = {
+      book13: allEntries.reduce((s, [, d]) => s + d.book13, 0),
+      book25: allEntries.reduce((s, [, d]) => s + d.book25, 0),
+      target13: allEntries.reduce((s, [, d]) => s + d.target13, 0),
+      mtd13: allEntries.reduce((s, [, d]) => s + d.mtd13, 0),
+      target25: allEntries.reduce((s, [, d]) => s + d.target25, 0),
+      mtd25: allEntries.reduce((s, [, d]) => s + d.mtd25, 0),
+    };
+    overall.persistency13 = Math.round(
+      allEntries.reduce((s, [, d]) => s + d.persistency13 * d.book13, 0) / overall.book13
+    );
+    overall.persistency25 = Math.round(
+      allEntries.reduce((s, [, d]) => s + d.persistency25 * d.book25, 0) / overall.book25
+    );
+    overall.rolling13 = MONTHS.map((_, i) =>
+      Math.round(allEntries.reduce((s, [, d]) => s + (d.rolling13[i] ?? d.persistency13) * d.book13, 0) / overall.book13)
+    );
+    overall.rolling25 = MONTHS.map((_, i) =>
+      Math.round(allEntries.reduce((s, [, d]) => s + (d.rolling25[i] ?? d.persistency25) * d.book25, 0) / overall.book25)
+    );
+    window.__overallData = overall;
+
+    document.getElementById('overall-block').innerHTML = `
+      <div class="overall-group">
+        <div class="overall-group-label">13M</div>
+        <div class="overall-stat"><div class="label">Base</div><div class="value">${fmtRs(overall.book13)}</div></div>
+        <div class="overall-stat"><div class="label">13M %</div><div class="value">${overall.persistency13}%</div></div>
+        <div class="overall-stat"><div class="label">Target</div><div class="value" style="font-size:20px;">${fmtRs(overall.target13)}</div></div>
+        <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs(overall.mtd13)}</div></div>
+      </div>
+      <div class="overall-group">
+        <div class="overall-group-label">25M</div>
+        <div class="overall-stat"><div class="label">Base</div><div class="value">${fmtRs(overall.book25)}</div></div>
+        <div class="overall-stat"><div class="label">25M %</div><div class="value">${overall.persistency25}%</div></div>
+        <div class="overall-stat"><div class="label">Target</div><div class="value" style="font-size:20px;">${fmtRs(overall.target25)}</div></div>
+        <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs(overall.mtd25)}</div></div>
+      </div>
+      <button class="overall-trend-btn" id="overall-trend-btn">View Overall M0&ndash;M12 Rolling Record</button>
+    `;
+    document.getElementById('overall-trend-btn').addEventListener('click', () => openModal(overall, 'Overall — All Channels'));
+
+    // Consolidated initiatives, tagged with their source channel(s)
+    const initiativesBox = document.getElementById('overall-initiatives');
+    const seen = new Map();
+    allEntries.forEach(([name, d]) => {
+      (d.initiatives || []).forEach(init => {
+        if (!seen.has(init)) seen.set(init, []);
+        seen.get(init).push(name);
+      });
+    });
+    let liHtml = '';
+    seen.forEach((channels, init) => {
+      liHtml += `<li>${init} <span class="src">— ${channels.join(', ')}</span></li>`;
+    });
+    initiativesBox.innerHTML = `<div class="overall-initiatives-box"><ul>${liHtml || '<li>No initiatives listed</li>'}</ul></div>`;
+
+    switchTab('__overall__');
+  }
+
+  // ---------- Tab switching ----------
+  const overallView = document.getElementById('overall-view');
+  const articleView = document.getElementById('article-view');
+  const articleContainer = document.getElementById('article-container');
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const isActive = (name === '__overall__' && btn.classList.contains('overall-tab')) || btn.dataset.channel === name;
+      btn.classList.toggle('active', isActive);
+    });
+
+    if (name === '__overall__') {
+      articleView.style.display = 'none';
+      overallView.style.display = 'block';
+    } else {
+      overallView.style.display = 'none';
+      articleView.style.display = 'block';
+      renderArticle(name);
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function renderArticle(name) {
+    const d = CHANNELS[name];
+    articleContainer.innerHTML = `
+      <div class="article">
+        <div>
+          <div class="kicker">${d.kicker}</div>
+          <h2>${d.headline}</h2>
+          <div class="byline">Persistency Desk &middot; Channel: ${channelDisplayName(name)}</div>
+          <p class="lede">${d.lede}</p>
+          <button class="trend-btn" id="trend-btn">View Full M0&ndash;M12 Rolling Record</button>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-title">By the Numbers &mdash; 13M</div>
+          <div class="stat-line"><span class="label">Base</span><span class="value">${fmtRs(d.book13)}</span></div>
+          <div class="stat-line"><span class="label">13M %</span><span class="value">${d.persistency13}%</span></div>
+          <div class="stat-line"><span class="label">Target</span><span class="value">${fmtRs(d.target13)}</span></div>
+          <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs(d.mtd13)}</span></div>
+
+          <div class="stat-box-title" style="margin-top:16px;">By the Numbers &mdash; 25M</div>
+          <div class="stat-line"><span class="label">Base</span><span class="value">${fmtRs(d.book25)}</span></div>
+          <div class="stat-line"><span class="label">25M %</span><span class="value">${d.persistency25}%</span></div>
+          <div class="stat-line"><span class="label">Target</span><span class="value">${fmtRs(d.target25)}</span></div>
+          <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs(d.mtd25)}</span></div>
+
+          <div class="initiatives-box">
+            <div class="stat-box-title">In Brief &mdash; This Month's Initiatives</div>
+            <ul>${(d.initiatives || []).map(i => `<li>${i}</li>`).join('') || '<li>None listed</li>'}</ul>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('trend-btn').addEventListener('click', () => openModal(d, name));
+  }
+
+  document.getElementById('masthead-click').addEventListener('click', () => switchTab('__overall__'));
+
+  // ---------- Modal + chart ----------
+  let chartInstance = null;
+  const overlay = document.getElementById('modal-overlay');
+
+  function openModal(d, label) {
+    document.getElementById('modal-title').textContent = label;
+    document.getElementById('fig-caption').textContent = `Fig. 1 — Rolling 13-month and 25-month persistency for ${label}, M0 (current month) through M12.`;
+
+    const ctx = document.getElementById('trend-chart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: MONTHS,
+        datasets: [
+          { label: '13M Persistency', data: d.rolling13, borderColor: '#1A1A18', backgroundColor: 'rgba(26,26,24,0.06)', tension: 0.25, fill: true, pointRadius: 3 },
+          { label: '25M Persistency', data: d.rolling25, borderColor: '#A6192E', backgroundColor: 'rgba(166,25,46,0.08)', tension: 0.25, fill: true, pointRadius: 3 },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { font: { family: 'Oswald', size: 11 } } } },
+        scales: { y: { ticks: { callback: v => v + '%' }, suggestedMin: 50, suggestedMax: 100 } },
+      },
+    });
+
+    const table = document.getElementById('rolling-table');
+    let rows = '<tr><th style="text-align:left;">Month</th>' + MONTHS.map(m => `<th>${m}</th>`).join('') + '</tr>';
+    rows += '<tr><td style="text-align:left; font-weight:600;">13M %</td>' + d.rolling13.map(v => `<td>${v}%</td>`).join('') + '</tr>';
+    rows += '<tr><td style="text-align:left; font-weight:600;">25M %</td>' + d.rolling25.map(v => `<td>${v}%</td>`).join('') + '</tr>';
+    table.innerHTML = rows;
+
+    overlay.classList.add('open');
+  }
+
+  document.getElementById('close-modal').addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+  // ============================================================
+  // GOOGLE SHEET LIVE-FETCH CONFIG
+  // Paste your published CSV links here (File > Share > Publish to web >
+  // pick the sheet > CSV, in your Google Sheet — one link per tab).
+  // Leave both empty to keep manual Excel upload only.
+  // ============================================================
+  const GOOGLE_SHEET_CASES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSAYest_y8W1gIh9YFCzoP1bKtjP6TflKKUiU55n_Ch_jitBajLT-AUt1wxkwadnA/pub?gid=1608456377&single=true&output=csv';   // "Cases" tab CSV link
+  const GOOGLE_SHEET_INFO_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSAYest_y8W1gIh9YFCzoP1bKtjP6TflKKUiU55n_Ch_jitBajLT-AUt1wxkwadnA/pub?gid=16612718&single=true&output=csv';    // "Channel Info" tab CSV link
+
+  // ============================================================
+  // GOOGLE DRIVE EXCEL LIVE-FETCH CONFIG (alternative to the CSV method above)
+  // Upload the actual .xlsx file (with "Cases" and "Channel Info" sheets) to
+  // Google Drive, share it as "Anyone with the link — Viewer", then turn its
+  // share link (drive.google.com/file/d/FILE_ID/view) into a direct-download
+  // link: https://drive.google.com/uc?export=download&id=FILE_ID
+  // Paste that direct-download link below. Leave empty to skip this method.
+  // ============================================================
+  const GOOGLE_DRIVE_EXCEL_URL = '';
+
+  // ---------- Turn raw case rows + channel info rows into the CHANNELS structure ----------
+  // casesRows:  [{ 'Channel Name', 'Bucket (13M/25M)', 'Month (M0-M12)', 'Premium Amount (Rs Crores)', 'Collected (Yes/No)' }, ...]
+  // infoRows:   [{ 'Channel Name', '13M Target (Rs Crores)', '13M MTD Collection (Rs Crores)', '25M Target (Rs Crores)', '25M MTD Collection (Rs Crores)', 'Initiatives (separate with ;)' }, ...]
+  function aggregateFromRows(casesRows, infoRows) {
+    // tally[channel][bucket][month] = { yesValue, totalValue } — value-wise (premium amount), not case count
+    const tally = {};
+
+    casesRows.forEach(row => {
+      const channel = String(row['Channel Name'] || row['Channel'] || '').trim();
+      const bucket = String(row['Bucket (13M/25M)'] || row['Bucket'] || '').trim().toUpperCase();
+      const month = String(row['Month (M0-M12)'] || row['Month'] || '').trim().toUpperCase();
+      const collected = String(row['Collected (Yes/No)'] || row['Collected'] || '').trim().toLowerCase();
+      const amount = Number(row['Premium Amount (Rs Crores)'] || row['Premium Amount'] || row['Amount']) || 0;
+      if (!channel || !bucket || !month) return;
+
+      tally[channel] = tally[channel] || {};
+      tally[channel][bucket] = tally[channel][bucket] || {};
+      tally[channel][bucket][month] = tally[channel][bucket][month] || { yesValue: 0, totalValue: 0 };
+      tally[channel][bucket][month].totalValue += amount;
+      if (collected === 'yes' || collected === 'y' || collected === '1' || collected === 'true') {
+        tally[channel][bucket][month].yesValue += amount;
+      }
+    });
+
+    const infoByChannel = {};
+    infoRows.forEach(row => {
+      const channel = String(row['Channel Name'] || row['Channel'] || '').trim();
+      if (!channel) return;
+
+      const rawInitiatives = String(row['Initiatives (separate with ;)'] || row['Initiatives'] || '')
+        .split(/[;\n]/).map(s => s.trim()).filter(Boolean);
+
+      // Clean up initiative lines:
+      //  - drop bare header/label lines like "Agency:-" or "DD:-" (just the
+      //    channel name followed by a colon/dash, no real content)
+      //  - strip leading numbering like "1:-", "2." etc. from each line
+      const initiatives = rawInitiatives
+        .filter(line => !/^[A-Za-z][A-Za-z\s]*[:\-]+$/.test(line))
+        .map(line => line.replace(/^\d+\s*[:.\-]+\s*/, '').trim())
+        .filter(Boolean);
+
+      // Case-insensitive key, so "AGENCY" in this sheet still matches "Agency" in Cases
+      infoByChannel[channel.toLowerCase()] = {
+        target13: Number(row['13M Target (Rs Crores)'] || row['13M Target']) || 0,
+        mtd13: Number(row['13M MTD Collection (Rs Crores)'] || row['13M MTD Collection']) || 0,
+        target25: Number(row['25M Target (Rs Crores)'] || row['25M Target']) || 0,
+        mtd25: Number(row['25M MTD Collection (Rs Crores)'] || row['25M MTD Collection']) || 0,
+        initiatives,
+      };
+    });
+
+    const pct = (yesVal, totalVal) => totalVal > 0 ? Math.round((yesVal / totalVal) * 100) : 0;
+
+    const newChannels = {};
+    Object.keys(tally).forEach(channel => {
+      const t13 = tally[channel]['13M'] || {};
+      const t25 = tally[channel]['25M'] || {};
+
+      // Aggregate 13M/25M % and Base exclude M0 (its collection window is still open,
+      // so it isn't a completed outcome yet) — only M1–M12 count toward these.
+      const sumExcludingM0 = (bucketData, key) =>
+        Object.entries(bucketData).reduce((s, [m, v]) => m === 'M0' ? s : s + v[key], 0);
+
+      const totalYesVal13 = sumExcludingM0(t13, 'yesValue');
+      const totalVal13 = sumExcludingM0(t13, 'totalValue');
+      const totalYesVal25 = sumExcludingM0(t25, 'yesValue');
+      const totalVal25 = sumExcludingM0(t25, 'totalValue');
+
+      const info = infoByChannel[channel.toLowerCase()] || {};
+      const d = {
+        book13: totalVal13,
+        persistency13: pct(totalYesVal13, totalVal13),
+        book25: totalVal25,
+        persistency25: pct(totalYesVal25, totalVal25),
+        target13: info.target13 || 0,
+        mtd13: info.mtd13 || 0,
+        target25: info.target25 || 0,
+        mtd25: info.mtd25 || 0,
+        initiatives: info.initiatives || [],
+        rolling13: MONTHS.map(m => t13[m] ? pct(t13[m].yesValue, t13[m].totalValue) : pct(totalYesVal13, totalVal13)),
+        rolling25: MONTHS.map(m => t25[m] ? pct(t25[m].yesValue, t25[m].totalValue) : pct(totalYesVal25, totalVal25)),
+      };
+      Object.assign(d, buildNarrative(channel, d));
+      newChannels[channel] = d;
+    });
+
+    return newChannels;
+  }
+
+  function applyNewChannels(newChannels, sourceLabel) {
+    if (Object.keys(newChannels).length === 0) {
+      throw new Error('No channels found — check the "Channel Name" column in your Cases sheet.');
+    }
+    CHANNELS = newChannels;
+    renderAll();
+    document.getElementById('data-banner').textContent = `✓ Loaded ${Object.keys(newChannels).length} channels from ${sourceLabel}`;
+    document.getElementById('data-banner').style.background = '#1E6B3E';
+  }
+
+  // ---------- Manual Excel upload ----------
+  // Expects a workbook with sheets "Cases" and "Channel Info" (see the sample template).
+  document.getElementById('excel-upload').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+
+        const casesSheetName = wb.SheetNames.find(n => n.toLowerCase().includes('case')) || wb.SheetNames[0];
+        const infoSheetName = wb.SheetNames.find(n => n.toLowerCase().includes('info')) || wb.SheetNames[1];
+
+        const casesRows = XLSX.utils.sheet_to_json(wb.Sheets[casesSheetName]);
+        const infoRows = infoSheetName ? XLSX.utils.sheet_to_json(wb.Sheets[infoSheetName]) : [];
+
+        applyNewChannels(aggregateFromRows(casesRows, infoRows), file.name);
+      } catch (err) {
+        alert('Could not read this file. ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  // ---------- Google Sheets live-fetch (runs automatically on load, if configured) ----------
+  function loadFromGoogleSheets() {
+    if (!GOOGLE_SHEET_CASES_CSV_URL || !GOOGLE_SHEET_INFO_CSV_URL) return;
+
+    document.getElementById('data-banner').textContent = '⏳ Loading live data from Google Sheets…';
+
+    Promise.all([
+      fetch(GOOGLE_SHEET_CASES_CSV_URL).then(r => r.text()),
+      fetch(GOOGLE_SHEET_INFO_CSV_URL).then(r => r.text()),
+    ]).then(([casesCsv, infoCsv]) => {
+      const casesRows = Papa.parse(casesCsv, { header: true, skipEmptyLines: true }).data;
+      const infoRows = Papa.parse(infoCsv, { header: true, skipEmptyLines: true }).data;
+      applyNewChannels(aggregateFromRows(casesRows, infoRows), 'Google Sheets (live)');
+    }).catch(err => {
+      document.getElementById('data-banner').textContent = '⚠ Could not load Google Sheets data — showing sample data. ' + err.message;
+    });
+  }
+
+  function loadFromGoogleDriveExcel() {
+    if (!GOOGLE_DRIVE_EXCEL_URL) return;
+
+    document.getElementById('data-banner').textContent = '⏳ Loading live data from Google Drive…';
+
+    fetch(GOOGLE_DRIVE_EXCEL_URL)
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.arrayBuffer();
+      })
+      .then(buffer => {
+        const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+        const casesSheetName = wb.SheetNames.find(n => n.toLowerCase().includes('case')) || wb.SheetNames[0];
+        const infoSheetName = wb.SheetNames.find(n => n.toLowerCase().includes('info')) || wb.SheetNames[1];
+        const casesRows = XLSX.utils.sheet_to_json(wb.Sheets[casesSheetName]);
+        const infoRows = infoSheetName ? XLSX.utils.sheet_to_json(wb.Sheets[infoSheetName]) : [];
+        applyNewChannels(aggregateFromRows(casesRows, infoRows), 'Google Drive (live)');
+      })
+      .catch(err => {
+        document.getElementById('data-banner').textContent =
+          '⚠ Could not load the Google Drive file — check it\'s shared as "Anyone with the link". ' + err.message;
+      });
+  }
+
+  renderAll();
+  loadFromGoogleSheets();
+  loadFromGoogleDriveExcel();
+</script>
+
+</body>
+</html>
