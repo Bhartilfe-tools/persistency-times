@@ -375,6 +375,26 @@
     margin: 6px 8px 0 0;
   }
 
+  .peer-summary {
+    margin-bottom: 16px;
+  }
+
+  .peer-summary-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+
+  .peer-summary p {
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+  }
+
   .trend-btn {
     font-family: 'Oswald', sans-serif;
     font-size: 12.5px;
@@ -781,7 +801,8 @@
 
   let CHANNELS = DUMMY_CHANNELS;
 
-  function fmtRs(v) { return '\u20B9' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Cr'; }
+  function fmtRs(v) { return '\u20B9' + Math.round(v).toLocaleString('en-IN') + ' Cr'; }
+  function fmtPct(v) { return Number(v).toFixed(1); }
 
   document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -814,7 +835,7 @@
   // Only for these six channels; any other channel (CAB, Online Sales, TAC, IM...) shows no owner.
   const CHANNEL_OWNERS = {
     'agency': 'Ajay Dubey',
-    'dd': 'Smit Kamdar',
+    'dd': 'Smir Kamdar',
     'po': 'Souvik Chakraborty',
     'po external': 'Souvik Chakraborty',
     'variable agency': 'Aarti Gupta',
@@ -825,6 +846,32 @@
   function channelDisplayName(name) {
     const owner = CHANNEL_OWNERS[name.trim().toLowerCase()];
     return owner ? `${name} (${owner})` : name;
+  }
+
+  // Builds a 3-line performance summary for one channel, comparing it against
+  // the best-performing PEER CHANNEL on the same bucket (13M or 25M) --
+  // never comparing a channel's 13M against its own 25M.
+  function buildPeerSummary(name, bucket) {
+    const key = bucket === '13' ? 'persistency13' : 'persistency25';
+    const label = bucket === '13' ? '13-month' : '25-month';
+    const entries = Object.entries(CHANNELS);
+    const sorted = entries.slice().sort((a, b) => b[1][key] - a[1][key]);
+    const best = sorted[0];
+    const rank = sorted.findIndex(([n]) => n === name) + 1;
+    const total = sorted.length;
+    const value = CHANNELS[name][key];
+    const isBest = best[0] === name;
+    const gap = fmtPct(Math.abs(value - best[1][key]));
+
+    const line1 = `${label.charAt(0).toUpperCase() + label.slice(1)} persistency stands at ${fmtPct(value)}% this edition.`;
+    const line2 = isBest
+      ? `${name} leads all channels on ${label} persistency this month.`
+      : `${name} is ${gap}% below ${best[0]}, the strongest performer in this bucket.`;
+    const line3 = total > 1
+      ? `That places ${name} at rank ${rank} of ${total} channels on ${label} persistency.`
+      : `${name} is the only channel tracked this edition.`;
+
+    return [line1, line2, line3];
   }
 
   function orderedChannelNames() {
@@ -874,11 +921,11 @@
         </td>
         <td><span class="status-tag ${d.statusClass}">${d.kicker}</span></td>
         <td class="num">${fmtRs(d.book13)}</td>
-        <td class="num">${d.persistency13}%</td>
+        <td class="num">${fmtPct(d.persistency13)}%</td>
         <td class="num">${fmtRs(d.target13)}</td>
         <td class="num">${fmtRs(d.mtd13)}</td>
         <td class="num">${fmtRs(d.book25)}</td>
-        <td class="num">${d.persistency25}%</td>
+        <td class="num">${fmtPct(d.persistency25)}%</td>
         <td class="num">${fmtRs(d.target25)}</td>
         <td class="num">${fmtRs(d.mtd25)}</td>
       `;
@@ -898,16 +945,16 @@
       mtd25: allEntries.reduce((s, [, d]) => s + d.mtd25, 0),
     };
     overall.persistency13 = Math.round(
-      allEntries.reduce((s, [, d]) => s + d.persistency13 * d.book13, 0) / overall.book13
-    );
+      (allEntries.reduce((s, [, d]) => s + d.persistency13 * d.book13, 0) / overall.book13) * 10
+    ) / 10;
     overall.persistency25 = Math.round(
-      allEntries.reduce((s, [, d]) => s + d.persistency25 * d.book25, 0) / overall.book25
-    );
+      (allEntries.reduce((s, [, d]) => s + d.persistency25 * d.book25, 0) / overall.book25) * 10
+    ) / 10;
     overall.rolling13 = MONTHS.map((_, i) =>
-      Math.round(allEntries.reduce((s, [, d]) => s + (d.rolling13[i] ?? d.persistency13) * d.book13, 0) / overall.book13)
+      Math.round((allEntries.reduce((s, [, d]) => s + (d.rolling13[i] ?? d.persistency13) * d.book13, 0) / overall.book13) * 10) / 10
     );
     overall.rolling25 = MONTHS.map((_, i) =>
-      Math.round(allEntries.reduce((s, [, d]) => s + (d.rolling25[i] ?? d.persistency25) * d.book25, 0) / overall.book25)
+      Math.round((allEntries.reduce((s, [, d]) => s + (d.rolling25[i] ?? d.persistency25) * d.book25, 0) / overall.book25) * 10) / 10
     );
     window.__overallData = overall;
 
@@ -915,14 +962,14 @@
       <div class="overall-group">
         <div class="overall-group-label">13M</div>
         <div class="overall-stat"><div class="label">Base</div><div class="value">${fmtRs(overall.book13)}</div></div>
-        <div class="overall-stat"><div class="label">13M %</div><div class="value">${overall.persistency13}%</div></div>
+        <div class="overall-stat"><div class="label">13M %</div><div class="value">${fmtPct(overall.persistency13)}%</div></div>
         <div class="overall-stat"><div class="label">Target</div><div class="value" style="font-size:20px;">${fmtRs(overall.target13)}</div></div>
         <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs(overall.mtd13)}</div></div>
       </div>
       <div class="overall-group">
         <div class="overall-group-label">25M</div>
         <div class="overall-stat"><div class="label">Base</div><div class="value">${fmtRs(overall.book25)}</div></div>
-        <div class="overall-stat"><div class="label">25M %</div><div class="value">${overall.persistency25}%</div></div>
+        <div class="overall-stat"><div class="label">25M %</div><div class="value">${fmtPct(overall.persistency25)}%</div></div>
         <div class="overall-stat"><div class="label">Target</div><div class="value" style="font-size:20px;">${fmtRs(overall.target25)}</div></div>
         <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs(overall.mtd25)}</div></div>
       </div>
@@ -972,25 +1019,36 @@
 
   function renderArticle(name) {
     const d = CHANNELS[name];
+    const lines13 = buildPeerSummary(name, '13');
+    const lines25 = buildPeerSummary(name, '25');
     articleContainer.innerHTML = `
       <div class="article">
         <div>
           <div class="kicker">${d.kicker}</div>
           <h2>${d.headline}</h2>
           <div class="byline">Persistency Desk &middot; Channel: ${channelDisplayName(name)}</div>
-          <p class="lede">${d.lede}</p>
+
+          <div class="peer-summary">
+            <div class="peer-summary-title">13-Month Performance</div>
+            <p>${lines13.join('<br>')}</p>
+          </div>
+          <div class="peer-summary">
+            <div class="peer-summary-title">25-Month Performance</div>
+            <p>${lines25.join('<br>')}</p>
+          </div>
+
           <button class="trend-btn" id="trend-btn">View Full M0&ndash;M12 Rolling Record</button>
         </div>
         <div class="stat-box">
           <div class="stat-box-title">By the Numbers &mdash; 13M</div>
           <div class="stat-line"><span class="label">Base</span><span class="value">${fmtRs(d.book13)}</span></div>
-          <div class="stat-line"><span class="label">13M %</span><span class="value">${d.persistency13}%</span></div>
+          <div class="stat-line"><span class="label">13M %</span><span class="value">${fmtPct(d.persistency13)}%</span></div>
           <div class="stat-line"><span class="label">Target</span><span class="value">${fmtRs(d.target13)}</span></div>
           <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs(d.mtd13)}</span></div>
 
           <div class="stat-box-title" style="margin-top:16px;">By the Numbers &mdash; 25M</div>
           <div class="stat-line"><span class="label">Base</span><span class="value">${fmtRs(d.book25)}</span></div>
-          <div class="stat-line"><span class="label">25M %</span><span class="value">${d.persistency25}%</span></div>
+          <div class="stat-line"><span class="label">25M %</span><span class="value">${fmtPct(d.persistency25)}%</span></div>
           <div class="stat-line"><span class="label">Target</span><span class="value">${fmtRs(d.target25)}</span></div>
           <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs(d.mtd25)}</span></div>
 
@@ -1034,8 +1092,8 @@
 
     const table = document.getElementById('rolling-table');
     let rows = '<tr><th style="text-align:left;">Month</th>' + MONTHS.map(m => `<th>${m}</th>`).join('') + '</tr>';
-    rows += '<tr><td style="text-align:left; font-weight:600;">13M %</td>' + d.rolling13.map(v => `<td>${v}%</td>`).join('') + '</tr>';
-    rows += '<tr><td style="text-align:left; font-weight:600;">25M %</td>' + d.rolling25.map(v => `<td>${v}%</td>`).join('') + '</tr>';
+    rows += '<tr><td style="text-align:left; font-weight:600;">13M %</td>' + d.rolling13.map(v => `<td>${fmtPct(v)}%</td>`).join('') + '</tr>';
+    rows += '<tr><td style="text-align:left; font-weight:600;">25M %</td>' + d.rolling25.map(v => `<td>${fmtPct(v)}%</td>`).join('') + '</tr>';
     table.innerHTML = rows;
 
     overlay.classList.add('open');
@@ -1050,8 +1108,8 @@
   // pick the sheet > CSV, in your Google Sheet — one link per tab).
   // Leave both empty to keep manual Excel upload only.
   // ============================================================
-  const GOOGLE_SHEET_CASES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSAYest_y8W1gIh9YFCzoP1bKtjP6TflKKUiU55n_Ch_jitBajLT-AUt1wxkwadnA/pub?gid=1608456377&single=true&output=csv';   // "Cases" tab CSV link
-  const GOOGLE_SHEET_INFO_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSAYest_y8W1gIh9YFCzoP1bKtjP6TflKKUiU55n_Ch_jitBajLT-AUt1wxkwadnA/pub?gid=16612718&single=true&output=csv';    // "Channel Info" tab CSV link
+  const GOOGLE_SHEET_CASES_CSV_URL = 'https://docs.google.com/spreadsheets/d/1HzWvNCrb0yzkyrjKglJRFsKmmgIkXij-/gviz/tq?tqx=out:csv&gid=1608456377';   // "Cases" tab CSV link
+  const GOOGLE_SHEET_INFO_CSV_URL = 'https://docs.google.com/spreadsheets/d/1HzWvNCrb0yzkyrjKglJRFsKmmgIkXij-/gviz/tq?tqx=out:csv&gid=16612718';    // "Channel Info" tab CSV link
 
   // ============================================================
   // GOOGLE DRIVE EXCEL LIVE-FETCH CONFIG (alternative to the CSV method above)
@@ -1114,7 +1172,7 @@
       };
     });
 
-    const pct = (yesVal, totalVal) => totalVal > 0 ? Math.round((yesVal / totalVal) * 100) : 0;
+    const pct = (yesVal, totalVal) => totalVal > 0 ? Math.round((yesVal / totalVal) * 1000) / 10 : 0;
 
     const newChannels = {};
     Object.keys(tally).forEach(channel => {
