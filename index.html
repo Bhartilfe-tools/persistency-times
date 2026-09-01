@@ -809,13 +809,13 @@
   // Build a kicker/headline/lede automatically from the numbers (used for uploaded real data)
   function buildNarrative(name, d) {
     let kicker, statusClass;
-    if (d.persistency25 < 70) { kicker = 'At Risk'; statusClass = 'risk'; }
-    else if (d.persistency25 < 80) { kicker = 'Watch List'; statusClass = 'watch'; }
-    else if (d.persistency25 < 88) { kicker = 'Steady'; statusClass = 'steady'; }
+    if (d.persistency13 < 75) { kicker = 'At Risk'; statusClass = 'risk'; }
+    else if (d.persistency13 < 80) { kicker = 'Watch List'; statusClass = 'watch'; }
+    else if (d.persistency13 < 88) { kicker = 'Steady'; statusClass = 'steady'; }
     else { kicker = 'Strong Performer'; statusClass = 'strong'; }
 
-    const headline = `${name} ${kicker === 'At Risk' ? 'Persistency Falls to' : kicker === 'Strong Performer' ? 'Leads With' : 'Holds at'} ${d.persistency25}% (25M)`;
-    const lede = `${name} reports ${d.persistency13}% 13-month and ${d.persistency25}% 25-month persistency this edition, with combined MTD collection of ${fmtRs((d.mtd13 || 0) + (d.mtd25 || 0))} against a combined target of ${fmtRs((d.target13 || 0) + (d.target25 || 0))}.`;
+    const headline = `${name} ${kicker === 'At Risk' ? 'Persistency Falls to' : kicker === 'Strong Performer' ? 'Leads With' : 'Holds at'} ${fmtPct(d.persistency13)}% (13M)`;
+    const lede = `${name} reports ${fmtPct(d.persistency13)}% 13-month and ${fmtPct(d.persistency25)}% 25-month persistency this edition, with combined MTD collection of ${fmtRs((d.mtd13 || 0) + (d.mtd25 || 0))} against a combined target of ${fmtRs((d.target13 || 0) + (d.target25 || 0))}.`;
 
     return { kicker, statusClass, headline, lede };
   }
