@@ -1352,8 +1352,19 @@
       fetch(GOOGLE_SHEET_CASES_CSV_URL + cacheBust, { cache: 'no-store' }).then(r => r.text()),
       fetch(GOOGLE_SHEET_INFO_CSV_URL + cacheBust, { cache: 'no-store' }).then(r => r.text()),
     ]).then(([casesCsv, infoCsv]) => {
+      // TEMPORARY DEBUG — remove after diagnosing the Agency issue
+      console.log('%c[DEBUG] infoCsv raw length:', 'color: #0ff; font-weight: bold;', infoCsv.length);
+      console.log('%c[DEBUG] infoCsv first 30 char codes:', 'color: #0ff; font-weight: bold;', Array.from(infoCsv.substring(0, 30)).map(c => c.charCodeAt(0)));
+      console.log('%c[DEBUG] infoCsv first 200 chars (raw):', 'color: #0ff; font-weight: bold;', JSON.stringify(infoCsv.substring(0, 200)));
+
+      const infoParseResult = Papa.parse(infoCsv, { header: true, skipEmptyLines: true });
+      console.log('%c[DEBUG] Papa.parse errors:', 'color: #f0f; font-weight: bold;', infoParseResult.errors);
+      console.log('%c[DEBUG] Papa.parse row count:', 'color: #f0f; font-weight: bold;', infoParseResult.data.length);
+      console.log('%c[DEBUG] Papa.parse row 0 (should be Agency):', 'color: #f0f; font-weight: bold;', infoParseResult.data[0]);
+      console.log('%c[DEBUG] Papa.parse ALL rows:', 'color: #f0f; font-weight: bold;', infoParseResult.data);
+
       const casesRows = Papa.parse(casesCsv, { header: true, skipEmptyLines: true }).data;
-      const infoRows = Papa.parse(infoCsv, { header: true, skipEmptyLines: true }).data;
+      const infoRows = infoParseResult.data;
       applyNewChannels(aggregateFromRows(casesRows, infoRows), 'Google Sheets (live)');
     }).catch(err => {
       document.getElementById('data-banner').textContent = '⚠ Could not load Google Sheets data — showing sample data. ' + err.message;
