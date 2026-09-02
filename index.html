@@ -246,7 +246,7 @@
     font-size: 13px;
   }
 
-  table.index-table.grouped tbody td:nth-child(7) { border-right: 2px solid var(--rule); }
+  table.index-table.grouped tbody td:nth-child(8) { border-right: 2px solid var(--rule); }
 
   table.index-table thead th {
     font-family: 'Oswald', sans-serif;
@@ -674,17 +674,19 @@
         <tr>
           <th rowspan="2">Channel</th>
           <th rowspan="2">Status</th>
-          <th colspan="5" class="group-13m">13M</th>
-          <th colspan="5" class="group-25m">25M</th>
+          <th colspan="6" class="group-13m">13M</th>
+          <th colspan="6" class="group-25m">25M</th>
         </tr>
         <tr>
           <th class="num sub">Base</th>
           <th class="num sub">13M %</th>
+          <th class="num sub">MTD</th>
           <th class="num sub">Target %</th>
           <th class="num sub">Target</th>
           <th class="num sub">MTD Collection</th>
           <th class="num sub">Base</th>
           <th class="num sub">25M %</th>
+          <th class="num sub">MTD</th>
           <th class="num sub">Target %</th>
           <th class="num sub">Target</th>
           <th class="num sub">MTD Collection</th>
@@ -855,12 +857,12 @@
   function fmtRs(v) { return '\u20B9' + Math.round(v).toLocaleString('en-IN') + ' Cr'; }
   function fmtRs1(v) { return '\u20B9' + Number(v).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' Cr'; }
   function fmtPct(v) { return Number(v).toFixed(1); }
-  function mtdBadge(movement) {
+  function mtdBadge(movement, showLabel = true) {
     if (movement === null || movement === undefined) return '';
     const cls = movement >= 0 ? 'up' : 'down';
     const arrow = movement >= 0 ? '\u25B2' : '\u25BC';
     const sign = movement >= 0 ? '+' : '';
-    return `<span class="mtd-move ${cls}">${arrow} ${sign}${fmtPct(movement)} MTD</span>`;
+    return `<span class="mtd-move ${cls}">${arrow} ${sign}${fmtPct(movement)}${showLabel ? ' MTD' : ''}</span>`;
   }
 
   document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -969,12 +971,14 @@
         </td>
         <td><span class="status-tag ${d.statusClass}">${d.kicker}</span></td>
         <td class="num">${fmtRs(d.book13)}</td>
-        <td class="num">${fmtPct(d.persistency13)}%${mtdBadge(d.mtdMovement13)}</td>
+        <td class="num">${fmtPct(d.persistency13)}%</td>
+        <td class="num">${mtdBadge(d.mtdMovement13, false)}</td>
         <td class="num">${d.targetPct13 !== null ? fmtPct(d.targetPct13) + '%' : '\u2014'}</td>
         <td class="num">${fmtRs(d.target13)}</td>
         <td class="num">${fmtRs1(d.mtd13)}</td>
         <td class="num">${fmtRs(d.book25)}</td>
-        <td class="num">${fmtPct(d.persistency25)}%${mtdBadge(d.mtdMovement25)}</td>
+        <td class="num">${fmtPct(d.persistency25)}%</td>
+        <td class="num">${mtdBadge(d.mtdMovement25, false)}</td>
         <td class="num">${d.targetPct25 !== null ? fmtPct(d.targetPct25) + '%' : '\u2014'}</td>
         <td class="num">${fmtRs(d.target25)}</td>
         <td class="num">${fmtRs1(d.mtd25)}</td>
