@@ -40,6 +40,7 @@
   .masthead-top {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-family: 'Oswald', sans-serif;
     font-size: 11px;
     letter-spacing: 0.08em;
@@ -47,6 +48,24 @@
     color: var(--ink-soft);
     padding-bottom: 8px;
   }
+
+  .masthead-top .right-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .past-perf-link {
+    color: var(--red);
+    text-decoration: none;
+    border: 1px solid var(--red);
+    padding: 3px 9px;
+    border-radius: 3px;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+  }
+
+  .past-perf-link:hover { background: var(--red); color: #fff; }
 
   .masthead { text-align: center; padding: 6px 0 10px; }
 
@@ -227,7 +246,7 @@
     font-size: 13px;
   }
 
-  table.index-table.grouped tbody td:nth-child(6) { border-right: 2px solid var(--rule); }
+  table.index-table.grouped tbody td:nth-child(7) { border-right: 2px solid var(--rule); }
 
   table.index-table thead th {
     font-family: 'Oswald', sans-serif;
@@ -440,6 +459,15 @@
   .stat-line .label { color: var(--ink-soft); }
   .stat-line .value { font-weight: 700; font-size: 16px; }
 
+  .mtd-move {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .mtd-move.up { color: #1E6B3E; }
+  .mtd-move.down { color: var(--red); }
+
   .target-bar-bg { background: var(--paper-deep); height: 6px; margin-top: 10px; border: 1px solid var(--rule); }
   .target-bar-fill { height: 100%; background: var(--ink); }
 
@@ -622,7 +650,10 @@
 
   <div class="masthead-top">
     <span id="today-date"></span>
-    <span>MTD Edition &middot; Issue No. 1</span>
+    <div class="right-group">
+      <span>MTD Edition &middot; Issue No. 1</span>
+      <a href="https://vahab0597-dev.github.io/target-vs-actual/" target="_blank" rel="noopener" class="past-perf-link">View Your Past Performance</a>
+    </div>
   </div>
 
   <div class="masthead" id="masthead-click">
@@ -643,16 +674,18 @@
         <tr>
           <th rowspan="2">Channel</th>
           <th rowspan="2">Status</th>
-          <th colspan="4" class="group-13m">13M</th>
-          <th colspan="4" class="group-25m">25M</th>
+          <th colspan="5" class="group-13m">13M</th>
+          <th colspan="5" class="group-25m">25M</th>
         </tr>
         <tr>
           <th class="num sub">Base</th>
           <th class="num sub">13M %</th>
+          <th class="num sub">Target %</th>
           <th class="num sub">Target</th>
           <th class="num sub">MTD Collection</th>
           <th class="num sub">Base</th>
           <th class="num sub">25M %</th>
+          <th class="num sub">Target %</th>
           <th class="num sub">Target</th>
           <th class="num sub">MTD Collection</th>
         </tr>
@@ -710,6 +743,8 @@
     'PO External': {
       book13: 900, persistency13: 73, book25: 550, persistency25: 61,
       target13: 110, mtd13: 75, target25: 70, mtd25: 45,
+      bom13: 74.0, bom25: 60.0, mtdMovement13: -1.0, mtdMovement25: 1.0,
+      targetPct13: 75.0, targetPct25: 65.0,
       kicker: 'At Risk', statusClass: 'risk',
       headline: 'PO External Persistency Falls to 61%, Lowest on Record',
       lede: 'PO External policies show the steepest drop-off of any channel this edition, with 25-month persistency at just 61% — a signal that onboarding quality may need review.',
@@ -720,6 +755,8 @@
     'IM': {
       book13: 2100, persistency13: 76, book25: 1400, persistency25: 65,
       target13: 250, mtd13: 185, target25: 170, mtd25: 125,
+      bom13: 76.0, bom25: 67.0, mtdMovement13: 0.0, mtdMovement25: -2.0,
+      targetPct13: 77.0, targetPct25: 69.0,
       kicker: 'At Risk', statusClass: 'risk',
       headline: 'IM Channel Persistency Slips to 65%, Raising Renewal Alarm',
       lede: 'The IM channel\u2019s 25-month persistency has fallen to 65% as MTD collection continues to trail behind the renewal target.',
@@ -730,6 +767,8 @@
     'RPD': {
       book13: 3300, persistency13: 79, book25: 2200, persistency25: 68,
       target13: 360, mtd13: 290, target25: 240, mtd25: 190,
+      bom13: 78.0, bom25: 66.0, mtdMovement13: 1.0, mtdMovement25: 2.0,
+      targetPct13: 83.0, targetPct25: 69.0,
       kicker: 'Watch List', statusClass: 'watch',
       headline: 'RPD Book Shows Strain as 25-Month Figures Dip',
       lede: 'RPD-sourced policies are holding a 79% 13-month rate, but the 68% 25-month figure suggests early gains are not translating into second-year renewals.',
@@ -740,6 +779,8 @@
     'Agency': {
       book13: 4500, persistency13: 82, book25: 3200, persistency25: 71,
       target13: 460, mtd13: 360, target25: 340, mtd25: 260,
+      bom13: 80.0, bom25: 70.0, mtdMovement13: 2.0, mtdMovement25: 1.0,
+      targetPct13: 85.0, targetPct25: 73.0,
       kicker: 'Watch List', statusClass: 'watch',
       headline: 'Agency Holds Steady Despite Soft 25-Month Showing',
       lede: 'The largest channel by book size, Agency remains resilient at 82% 13-month persistency, though the 71% 25-month print keeps it on the watch list.',
@@ -750,6 +791,8 @@
     'DD': {
       book13: 2700, persistency13: 85, book25: 1900, persistency25: 77,
       target13: 275, mtd13: 230, target25: 195, mtd25: 160,
+      bom13: 87.0, bom25: 78.0, mtdMovement13: -2.0, mtdMovement25: -1.0,
+      targetPct13: 87.0, targetPct25: 81.0,
       kicker: 'Steady', statusClass: 'steady',
       headline: 'DD Stays the Course at 77%',
       lede: 'DD channel renewals continue at a stable pace, with 25-month persistency holding at 77% this month.',
@@ -760,6 +803,8 @@
     'BANCA': {
       book13: 6800, persistency13: 88, book25: 5100, persistency25: 79,
       target13: 655, mtd13: 565, target25: 495, mtd25: 425,
+      bom13: 89.0, bom25: 79.0, mtdMovement13: -1.0, mtdMovement25: 0.0,
+      targetPct13: 89.0, targetPct25: 81.0,
       kicker: 'Strong Performer', statusClass: 'strong',
       headline: 'BANCA Nears Target With Strong Renewal Pace',
       lede: 'BANCA leads on book size and is closing in on its renewal target, with persistency figures among the healthiest on the desk this month.',
@@ -770,6 +815,8 @@
     'CAB': {
       book13: 1500, persistency13: 91, book25: 900, persistency25: 84,
       target13: 160, mtd13: 150, target25: 100, mtd25: 90,
+      bom13: 91.0, bom25: 84.0, mtdMovement13: 0.0, mtdMovement25: 0.0,
+      targetPct13: 95.0, targetPct25: 85.0,
       kicker: 'Strong Performer', statusClass: 'strong',
       headline: 'CAB Leads the Pack, Persistency Tops 84%',
       lede: 'The smallest book by size but among the best performers by rate: CAB posts strong 13- and 25-month persistency this edition.',
@@ -780,6 +827,8 @@
     'Online Sales': {
       book13: 5200, persistency13: 93, book25: 4400, persistency25: 87,
       target13: 460, mtd13: 440, target25: 390, mtd25: 370,
+      bom13: 94.0, bom25: 88.0, mtdMovement13: -1.0, mtdMovement25: -1.0,
+      targetPct13: 95.0, targetPct25: 89.0,
       kicker: 'Strong Performer', statusClass: 'strong',
       headline: 'Online Sales Tops the League Table at 87% Persistency',
       lede: 'Online-sourced policies remain the most reliable book on the desk, posting the highest persistency of any channel this month.',
@@ -790,6 +839,8 @@
     'TAC': {
       book13: 1200, persistency13: 80, book25: 800, persistency25: 70,
       target13: 145, mtd13: 115, target25: 95, mtd25: 75,
+      bom13: 82.0, bom25: 72.0, mtdMovement13: -2.0, mtdMovement25: -2.0,
+      targetPct13: 81.0, targetPct25: 73.0,
       kicker: 'Watch List', statusClass: 'watch',
       headline: 'TAC Holds at 70%, Middle of the Pack',
       lede: 'TAC channel persistency sits at 70% for the 25-month bucket, tracking close to the portfolio average.',
@@ -803,6 +854,13 @@
 
   function fmtRs(v) { return '\u20B9' + Math.round(v).toLocaleString('en-IN') + ' Cr'; }
   function fmtPct(v) { return Number(v).toFixed(1); }
+  function mtdBadge(movement) {
+    if (movement === null || movement === undefined) return '';
+    const cls = movement >= 0 ? 'up' : 'down';
+    const arrow = movement >= 0 ? '\u25B2' : '\u25BC';
+    const sign = movement >= 0 ? '+' : '';
+    return `<span class="mtd-move ${cls}">${arrow} ${sign}${fmtPct(movement)} MTD</span>`;
+  }
 
   document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -833,19 +891,8 @@
 
   // Channel owners — shown in brackets next to the channel name.
   // Only for these six channels; any other channel (CAB, Online Sales, TAC, IM...) shows no owner.
-  const CHANNEL_OWNERS = {
-    'agency': 'Ajay Dubey',
-    'dd': 'Smit Kamdar',
-    'po': 'Souvik Chakraborty',
-    'po external': 'Souvik Chakraborty',
-    'variable agency': 'Arti Gupta',
-    'banca': 'Saleem Momin',
-    'rpd': 'Rajiv Sinha',
-  };
-
   function channelDisplayName(name) {
-    const owner = CHANNEL_OWNERS[name.trim().toLowerCase()];
-    return owner ? `${name} (${owner})` : name;
+    return name;
   }
 
   // Builds a 3-line performance summary for one channel, comparing it against
@@ -921,11 +968,13 @@
         </td>
         <td><span class="status-tag ${d.statusClass}">${d.kicker}</span></td>
         <td class="num">${fmtRs(d.book13)}</td>
-        <td class="num">${fmtPct(d.persistency13)}%</td>
+        <td class="num">${fmtPct(d.persistency13)}%${mtdBadge(d.mtdMovement13)}</td>
+        <td class="num">${d.targetPct13 !== null ? fmtPct(d.targetPct13) + '%' : '\u2014'}</td>
         <td class="num">${fmtRs(d.target13)}</td>
         <td class="num">${fmtRs(d.mtd13)}</td>
         <td class="num">${fmtRs(d.book25)}</td>
-        <td class="num">${fmtPct(d.persistency25)}%</td>
+        <td class="num">${fmtPct(d.persistency25)}%${mtdBadge(d.mtdMovement25)}</td>
+        <td class="num">${d.targetPct25 !== null ? fmtPct(d.targetPct25) + '%' : '\u2014'}</td>
         <td class="num">${fmtRs(d.target25)}</td>
         <td class="num">${fmtRs(d.mtd25)}</td>
       `;
@@ -950,6 +999,22 @@
     overall.persistency25 = Math.round(
       (allEntries.reduce((s, [, d]) => s + d.persistency25 * d.book25, 0) / overall.book25) * 10
     ) / 10;
+
+    // Book-weighted BOM baseline, using only channels that have a BOM value entered.
+    const bom13Entries = allEntries.filter(([, d]) => d.bom13 !== null);
+    const bom13Book = bom13Entries.reduce((s, [, d]) => s + d.book13, 0);
+    overall.bom13 = bom13Book > 0
+      ? Math.round((bom13Entries.reduce((s, [, d]) => s + d.bom13 * d.book13, 0) / bom13Book) * 10) / 10
+      : null;
+    overall.mtdMovement13 = overall.bom13 !== null ? Math.round((overall.persistency13 - overall.bom13) * 10) / 10 : null;
+
+    const bom25Entries = allEntries.filter(([, d]) => d.bom25 !== null);
+    const bom25Book = bom25Entries.reduce((s, [, d]) => s + d.book25, 0);
+    overall.bom25 = bom25Book > 0
+      ? Math.round((bom25Entries.reduce((s, [, d]) => s + d.bom25 * d.book25, 0) / bom25Book) * 10) / 10
+      : null;
+    overall.mtdMovement25 = overall.bom25 !== null ? Math.round((overall.persistency25 - overall.bom25) * 10) / 10 : null;
+
     overall.rolling13 = MONTHS.map((_, i) =>
       Math.round((allEntries.reduce((s, [, d]) => s + (d.rolling13[i] ?? d.persistency13) * d.book13, 0) / overall.book13) * 10) / 10
     );
@@ -962,14 +1027,14 @@
       <div class="overall-group">
         <div class="overall-group-label">13M</div>
         <div class="overall-stat"><div class="label">Base</div><div class="value">${fmtRs(overall.book13)}</div></div>
-        <div class="overall-stat"><div class="label">13M %</div><div class="value">${fmtPct(overall.persistency13)}%</div></div>
+        <div class="overall-stat"><div class="label">13M %</div><div class="value">${fmtPct(overall.persistency13)}%</div>${overall.mtdMovement13 !== null ? `<div style="margin-top:4px;">${mtdBadge(overall.mtdMovement13)}</div>` : ''}</div>
         <div class="overall-stat"><div class="label">Target</div><div class="value" style="font-size:20px;">${fmtRs(overall.target13)}</div></div>
         <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs(overall.mtd13)}</div></div>
       </div>
       <div class="overall-group">
         <div class="overall-group-label">25M</div>
         <div class="overall-stat"><div class="label">Base</div><div class="value">${fmtRs(overall.book25)}</div></div>
-        <div class="overall-stat"><div class="label">25M %</div><div class="value">${fmtPct(overall.persistency25)}%</div></div>
+        <div class="overall-stat"><div class="label">25M %</div><div class="value">${fmtPct(overall.persistency25)}%</div>${overall.mtdMovement25 !== null ? `<div style="margin-top:4px;">${mtdBadge(overall.mtdMovement25)}</div>` : ''}</div>
         <div class="overall-stat"><div class="label">Target</div><div class="value" style="font-size:20px;">${fmtRs(overall.target25)}</div></div>
         <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs(overall.mtd25)}</div></div>
       </div>
@@ -1042,13 +1107,15 @@
         <div class="stat-box">
           <div class="stat-box-title">By the Numbers &mdash; 13M</div>
           <div class="stat-line"><span class="label">Base</span><span class="value">${fmtRs(d.book13)}</span></div>
-          <div class="stat-line"><span class="label">13M %</span><span class="value">${fmtPct(d.persistency13)}%</span></div>
+          <div class="stat-line"><span class="label">13M %</span><span class="value">${fmtPct(d.persistency13)}%${mtdBadge(d.mtdMovement13)}</span></div>
+          <div class="stat-line"><span class="label">Target %</span><span class="value">${d.targetPct13 !== null ? fmtPct(d.targetPct13) + '%' : '\u2014'}</span></div>
           <div class="stat-line"><span class="label">Target</span><span class="value">${fmtRs(d.target13)}</span></div>
           <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs(d.mtd13)}</span></div>
 
           <div class="stat-box-title" style="margin-top:16px;">By the Numbers &mdash; 25M</div>
           <div class="stat-line"><span class="label">Base</span><span class="value">${fmtRs(d.book25)}</span></div>
-          <div class="stat-line"><span class="label">25M %</span><span class="value">${fmtPct(d.persistency25)}%</span></div>
+          <div class="stat-line"><span class="label">25M %</span><span class="value">${fmtPct(d.persistency25)}%${mtdBadge(d.mtdMovement25)}</span></div>
+          <div class="stat-line"><span class="label">Target %</span><span class="value">${d.targetPct25 !== null ? fmtPct(d.targetPct25) + '%' : '\u2014'}</span></div>
           <div class="stat-line"><span class="label">Target</span><span class="value">${fmtRs(d.target25)}</span></div>
           <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs(d.mtd25)}</span></div>
 
@@ -1168,6 +1235,10 @@
         mtd13: Number(row['13M MTD Collection (Rs Crores)'] || row['13M MTD Collection']) || 0,
         target25: Number(row['25M Target (Rs Crores)'] || row['25M Target']) || 0,
         mtd25: Number(row['25M MTD Collection (Rs Crores)'] || row['25M MTD Collection']) || 0,
+        bom13: row['13M BOM %'] !== undefined && row['13M BOM %'] !== '' ? Number(row['13M BOM %']) : null,
+        bom25: row['25M BOM %'] !== undefined && row['25M BOM %'] !== '' ? Number(row['25M BOM %']) : null,
+        targetPct13: row['13M Target %'] !== undefined && row['13M Target %'] !== '' ? Number(row['13M Target %']) : null,
+        targetPct25: row['25M Target %'] !== undefined && row['25M Target %'] !== '' ? Number(row['25M Target %']) : null,
         initiatives,
       };
     });
@@ -1199,10 +1270,16 @@
         mtd13: info.mtd13 || 0,
         target25: info.target25 || 0,
         mtd25: info.mtd25 || 0,
+        bom13: info.bom13 ?? null,
+        bom25: info.bom25 ?? null,
+        targetPct13: info.targetPct13 ?? null,
+        targetPct25: info.targetPct25 ?? null,
         initiatives: info.initiatives || [],
         rolling13: MONTHS.map(m => t13[m] ? pct(t13[m].yesValue, t13[m].totalValue) : pct(totalYesVal13, totalVal13)),
         rolling25: MONTHS.map(m => t25[m] ? pct(t25[m].yesValue, t25[m].totalValue) : pct(totalYesVal25, totalVal25)),
       };
+      d.mtdMovement13 = (d.bom13 !== null) ? (d.persistency13 - d.bom13) : null;
+      d.mtdMovement25 = (d.bom25 !== null) ? (d.persistency25 - d.bom25) : null;
       Object.assign(d, buildNarrative(channel, d));
       newChannels[channel] = d;
     });
