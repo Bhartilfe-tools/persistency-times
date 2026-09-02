@@ -1329,9 +1329,13 @@
 
     document.getElementById('data-banner').textContent = '⏳ Loading live data from Google Sheets…';
 
+    // Cache-bust: Google's gviz endpoint can serve a stale cached response for a
+    // while after a sheet edit. Appending a changing dummy param forces a fresh fetch.
+    const cacheBust = '&_cb=' + Date.now();
+
     Promise.all([
-      fetch(GOOGLE_SHEET_CASES_CSV_URL).then(r => r.text()),
-      fetch(GOOGLE_SHEET_INFO_CSV_URL).then(r => r.text()),
+      fetch(GOOGLE_SHEET_CASES_CSV_URL + cacheBust, { cache: 'no-store' }).then(r => r.text()),
+      fetch(GOOGLE_SHEET_INFO_CSV_URL + cacheBust, { cache: 'no-store' }).then(r => r.text()),
     ]).then(([casesCsv, infoCsv]) => {
       const casesRows = Papa.parse(casesCsv, { header: true, skipEmptyLines: true }).data;
       const infoRows = Papa.parse(infoCsv, { header: true, skipEmptyLines: true }).data;
