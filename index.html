@@ -1241,7 +1241,15 @@
         targetPct25: row['25M Target %'] !== undefined && row['25M Target %'] !== '' ? Number(row['25M Target %']) : null,
         initiatives,
       };
+
+      // TEMPORARY DEBUG — remove after diagnosing the Agency issue
+      if (channel.toLowerCase() === 'agency') {
+        console.log('%c[DEBUG] Raw Agency row from Channel Info:', 'color: #0f0; font-weight: bold;', row);
+        console.log('%c[DEBUG] Computed infoByChannel entry for "agency":', 'color: #0f0; font-weight: bold;', infoByChannel['agency']);
+      }
     });
+
+    console.log('%c[DEBUG] All keys in infoByChannel:', 'color: #0f0; font-weight: bold;', Object.keys(infoByChannel));
 
     const pct = (yesVal, totalVal) => totalVal > 0 ? Math.round((yesVal / totalVal) * 1000) / 10 : 0;
 
@@ -1261,6 +1269,13 @@
       const totalVal25 = sumExcludingM0(t25, 'totalValue');
 
       const info = infoByChannel[channel.toLowerCase()] || {};
+
+      // TEMPORARY DEBUG — remove after diagnosing the Agency issue
+      if (channel.toLowerCase() === 'agency') {
+        console.log('%c[DEBUG] Looking up channel from Cases sheet:', 'color: #ff0; font-weight: bold;', JSON.stringify(channel));
+        console.log('%c[DEBUG] Lookup key used:', 'color: #ff0; font-weight: bold;', JSON.stringify(channel.toLowerCase()));
+        console.log('%c[DEBUG] info object found:', 'color: #ff0; font-weight: bold;', info);
+      }
       const d = {
         book13: totalVal13,
         persistency13: pct(totalYesVal13, totalVal13),
