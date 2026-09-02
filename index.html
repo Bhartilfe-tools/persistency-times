@@ -853,6 +853,7 @@
   let CHANNELS = DUMMY_CHANNELS;
 
   function fmtRs(v) { return '\u20B9' + Math.round(v).toLocaleString('en-IN') + ' Cr'; }
+  function fmtRs1(v) { return '\u20B9' + Number(v).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' Cr'; }
   function fmtPct(v) { return Number(v).toFixed(1); }
   function mtdBadge(movement) {
     if (movement === null || movement === undefined) return '';
@@ -971,12 +972,12 @@
         <td class="num">${fmtPct(d.persistency13)}%${mtdBadge(d.mtdMovement13)}</td>
         <td class="num">${d.targetPct13 !== null ? fmtPct(d.targetPct13) + '%' : '\u2014'}</td>
         <td class="num">${fmtRs(d.target13)}</td>
-        <td class="num">${fmtRs(d.mtd13)}</td>
+        <td class="num">${fmtRs1(d.mtd13)}</td>
         <td class="num">${fmtRs(d.book25)}</td>
         <td class="num">${fmtPct(d.persistency25)}%${mtdBadge(d.mtdMovement25)}</td>
         <td class="num">${d.targetPct25 !== null ? fmtPct(d.targetPct25) + '%' : '\u2014'}</td>
         <td class="num">${fmtRs(d.target25)}</td>
-        <td class="num">${fmtRs(d.mtd25)}</td>
+        <td class="num">${fmtRs1(d.mtd25)}</td>
       `;
       tr.addEventListener('click', () => switchTab(name));
       indexBody.appendChild(tr);
@@ -1029,14 +1030,14 @@
         <div class="overall-stat"><div class="label">Base</div><div class="value">${fmtRs(overall.book13)}</div></div>
         <div class="overall-stat"><div class="label">13M %</div><div class="value">${fmtPct(overall.persistency13)}%</div>${overall.mtdMovement13 !== null ? `<div style="margin-top:4px;">${mtdBadge(overall.mtdMovement13)}</div>` : ''}</div>
         <div class="overall-stat"><div class="label">Target</div><div class="value" style="font-size:20px;">${fmtRs(overall.target13)}</div></div>
-        <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs(overall.mtd13)}</div></div>
+        <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs1(overall.mtd13)}</div></div>
       </div>
       <div class="overall-group">
         <div class="overall-group-label">25M</div>
         <div class="overall-stat"><div class="label">Base</div><div class="value">${fmtRs(overall.book25)}</div></div>
         <div class="overall-stat"><div class="label">25M %</div><div class="value">${fmtPct(overall.persistency25)}%</div>${overall.mtdMovement25 !== null ? `<div style="margin-top:4px;">${mtdBadge(overall.mtdMovement25)}</div>` : ''}</div>
         <div class="overall-stat"><div class="label">Target</div><div class="value" style="font-size:20px;">${fmtRs(overall.target25)}</div></div>
-        <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs(overall.mtd25)}</div></div>
+        <div class="overall-stat"><div class="label">MTD Collection</div><div class="value" style="font-size:20px;">${fmtRs1(overall.mtd25)}</div></div>
       </div>
       <button class="overall-trend-btn" id="overall-trend-btn">View Overall M0&ndash;M12 Rolling Record</button>
     `;
@@ -1110,14 +1111,14 @@
           <div class="stat-line"><span class="label">13M %</span><span class="value">${fmtPct(d.persistency13)}%${mtdBadge(d.mtdMovement13)}</span></div>
           <div class="stat-line"><span class="label">Target %</span><span class="value">${d.targetPct13 !== null ? fmtPct(d.targetPct13) + '%' : '\u2014'}</span></div>
           <div class="stat-line"><span class="label">Target</span><span class="value">${fmtRs(d.target13)}</span></div>
-          <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs(d.mtd13)}</span></div>
+          <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs1(d.mtd13)}</span></div>
 
           <div class="stat-box-title" style="margin-top:16px;">By the Numbers &mdash; 25M</div>
           <div class="stat-line"><span class="label">Base</span><span class="value">${fmtRs(d.book25)}</span></div>
           <div class="stat-line"><span class="label">25M %</span><span class="value">${fmtPct(d.persistency25)}%${mtdBadge(d.mtdMovement25)}</span></div>
           <div class="stat-line"><span class="label">Target %</span><span class="value">${d.targetPct25 !== null ? fmtPct(d.targetPct25) + '%' : '\u2014'}</span></div>
           <div class="stat-line"><span class="label">Target</span><span class="value">${fmtRs(d.target25)}</span></div>
-          <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs(d.mtd25)}</span></div>
+          <div class="stat-line"><span class="label">MTD Collection</span><span class="value">${fmtRs1(d.mtd25)}</span></div>
 
           <div class="initiatives-box">
             <div class="stat-box-title">In Brief &mdash; This Month's Initiatives</div>
@@ -1241,15 +1242,7 @@
         targetPct25: row['25M Target %'] !== undefined && row['25M Target %'] !== '' ? Number(row['25M Target %']) : null,
         initiatives,
       };
-
-      // TEMPORARY DEBUG — remove after diagnosing the Agency issue
-      if (channel.toLowerCase() === 'agency') {
-        console.log('%c[DEBUG] Raw Agency row from Channel Info:', 'color: #0f0; font-weight: bold;', row);
-        console.log('%c[DEBUG] Computed infoByChannel entry for "agency":', 'color: #0f0; font-weight: bold;', infoByChannel['agency']);
-      }
     });
-
-    console.log('%c[DEBUG] All keys in infoByChannel:', 'color: #0f0; font-weight: bold;', Object.keys(infoByChannel));
 
     const pct = (yesVal, totalVal) => totalVal > 0 ? Math.round((yesVal / totalVal) * 1000) / 10 : 0;
 
@@ -1269,13 +1262,6 @@
       const totalVal25 = sumExcludingM0(t25, 'totalValue');
 
       const info = infoByChannel[channel.toLowerCase()] || {};
-
-      // TEMPORARY DEBUG — remove after diagnosing the Agency issue
-      if (channel.toLowerCase() === 'agency') {
-        console.log('%c[DEBUG] Looking up channel from Cases sheet:', 'color: #ff0; font-weight: bold;', JSON.stringify(channel));
-        console.log('%c[DEBUG] Lookup key used:', 'color: #ff0; font-weight: bold;', JSON.stringify(channel.toLowerCase()));
-        console.log('%c[DEBUG] info object found:', 'color: #ff0; font-weight: bold;', info);
-      }
       const d = {
         book13: totalVal13,
         persistency13: pct(totalYesVal13, totalVal13),
@@ -1352,19 +1338,8 @@
       fetch(GOOGLE_SHEET_CASES_CSV_URL + cacheBust, { cache: 'no-store' }).then(r => r.text()),
       fetch(GOOGLE_SHEET_INFO_CSV_URL + cacheBust, { cache: 'no-store' }).then(r => r.text()),
     ]).then(([casesCsv, infoCsv]) => {
-      // TEMPORARY DEBUG — remove after diagnosing the Agency issue
-      console.log('%c[DEBUG] infoCsv raw length:', 'color: #0ff; font-weight: bold;', infoCsv.length);
-      console.log('%c[DEBUG] infoCsv first 30 char codes:', 'color: #0ff; font-weight: bold;', Array.from(infoCsv.substring(0, 30)).map(c => c.charCodeAt(0)));
-      console.log('%c[DEBUG] infoCsv first 200 chars (raw):', 'color: #0ff; font-weight: bold;', JSON.stringify(infoCsv.substring(0, 200)));
-
-      const infoParseResult = Papa.parse(infoCsv, { header: true, skipEmptyLines: true });
-      console.log('%c[DEBUG] Papa.parse errors:', 'color: #f0f; font-weight: bold;', infoParseResult.errors);
-      console.log('%c[DEBUG] Papa.parse row count:', 'color: #f0f; font-weight: bold;', infoParseResult.data.length);
-      console.log('%c[DEBUG] Papa.parse row 0 (should be Agency):', 'color: #f0f; font-weight: bold;', infoParseResult.data[0]);
-      console.log('%c[DEBUG] Papa.parse ALL rows:', 'color: #f0f; font-weight: bold;', infoParseResult.data);
-
       const casesRows = Papa.parse(casesCsv, { header: true, skipEmptyLines: true }).data;
-      const infoRows = infoParseResult.data;
+      const infoRows = Papa.parse(infoCsv, { header: true, skipEmptyLines: true }).data;
       applyNewChannels(aggregateFromRows(casesRows, infoRows), 'Google Sheets (live)');
     }).catch(err => {
       document.getElementById('data-banner').textContent = '⚠ Could not load Google Sheets data — showing sample data. ' + err.message;
