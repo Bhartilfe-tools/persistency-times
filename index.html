@@ -101,44 +101,6 @@
     margin-bottom: 18px;
   }
 
-  .upload-bar {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    background: #fff;
-    border: 1px solid var(--rule);
-    padding: 12px 18px;
-    margin-bottom: 20px;
-  }
-
-  .upload-btn {
-    font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    background: var(--ink);
-    color: var(--paper);
-    padding: 9px 18px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .upload-hint {
-    font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    color: var(--ink-soft);
-  }
-
-  .upload-status {
-    font-family: 'Oswald', sans-serif;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: #1E6B3E;
-  }
-  .upload-status.error { color: var(--red); }
-
   .tab-bar {
     display: flex;
     flex-wrap: wrap;
@@ -642,6 +604,70 @@
     .page { padding: 20px 18px 40px; }
     table.index-table .idx-headline { display: none; }
   }
+
+  /* ============================================================
+     Responsive table collapse — every channel row becomes a
+     labeled stacked card on narrow screens. No data is hidden,
+     only the layout changes from columns to a labeled list.
+     ============================================================ */
+  @media (max-width: 700px) {
+    table.index-table.grouped { min-width: 0; }
+    table.index-table.grouped thead { display: none; }
+    table.index-table.grouped,
+    table.index-table.grouped tbody,
+    table.index-table.grouped tr,
+    table.index-table.grouped td {
+      display: block;
+      width: 100%;
+    }
+    table.index-table.grouped tr {
+      margin-bottom: 16px;
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 4px 14px 10px;
+      background: var(--paper);
+    }
+    table.index-table.grouped td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--paper-deep);
+      border-right: none !important;
+      text-align: right;
+    }
+    table.index-table.grouped td:last-child { border-bottom: none; }
+    table.index-table.grouped td::before {
+      content: attr(data-label);
+      font-family: 'Oswald', sans-serif;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--ink-soft);
+      text-align: left;
+      flex-shrink: 0;
+    }
+    table.index-table.grouped td[data-label="Channel"],
+    table.index-table.grouped td[data-label="Status"] {
+      padding-top: 12px;
+      justify-content: flex-start;
+    }
+    table.index-table.grouped td[data-label="Channel"]::before,
+    table.index-table.grouped td[data-label="Status"]::before {
+      display: none;
+    }
+    table.index-table.grouped td[data-label="Channel"] .idx-channel {
+      font-size: 19px;
+    }
+    table.index-table.grouped td[data-label="13M Base"],
+    table.index-table.grouped td[data-label="25M Base"] {
+      margin-top: 6px;
+      border-top: 2px solid var(--rule);
+      padding-top: 12px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -652,7 +678,7 @@
     <span id="today-date"></span>
     <div class="right-group">
       <span>MTD Edition &middot; Issue No. 1</span>
-      <a href="https://vahab0597-dev.github.io/target-vs-actual/" target="_blank" rel="noopener" class="past-perf-link">View Your Past Performance</a>
+      <a href="https://bhartilfe-tools.github.io/target-vs-actual/" target="_blank" rel="noopener" class="past-perf-link">View Your Past Performance</a>
     </div>
   </div>
 
@@ -712,13 +738,7 @@
     <div id="article-container"></div>
   </div>
 
-  <div class="dummy-banner" id="data-banner" style="margin-top:30px;">⚠ SAMPLE DATA EDITION — upload your Excel file below to replace with actuals</div>
-
-  <div class="upload-bar">
-    <label for="excel-upload" class="upload-btn">📁 Upload Excel Data</label>
-    <input type="file" id="excel-upload" accept=".xlsx,.xls" style="display:none;">
-    <span class="upload-hint">Sheets "Cases" + "Channel Info" &middot; File stays in your browser, never uploaded anywhere</span>
-  </div>
+  <div class="dummy-banner" id="data-banner" style="margin-top:30px;">⏳ Loading live data…</div>
 
 </div>
 
@@ -966,22 +986,22 @@
       const d = CHANNELS[name];
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>
+        <td data-label="Channel">
           <div class="idx-channel">${channelDisplayName(name)}</div>
         </td>
-        <td><span class="status-tag ${d.statusClass}">${d.kicker}</span></td>
-        <td class="num">${fmtRs(d.book13)}</td>
-        <td class="num">${fmtPct(d.persistency13)}%</td>
-        <td class="num">${mtdBadge(d.mtdMovement13, false)}</td>
-        <td class="num">${d.targetPct13 !== null ? fmtPct(d.targetPct13) + '%' : '\u2014'}</td>
-        <td class="num">${fmtRs(d.target13)}</td>
-        <td class="num">${fmtRs1(d.mtd13)}</td>
-        <td class="num">${fmtRs(d.book25)}</td>
-        <td class="num">${fmtPct(d.persistency25)}%</td>
-        <td class="num">${mtdBadge(d.mtdMovement25, false)}</td>
-        <td class="num">${d.targetPct25 !== null ? fmtPct(d.targetPct25) + '%' : '\u2014'}</td>
-        <td class="num">${fmtRs(d.target25)}</td>
-        <td class="num">${fmtRs1(d.mtd25)}</td>
+        <td data-label="Status"><span class="status-tag ${d.statusClass}">${d.kicker}</span></td>
+        <td class="num" data-label="13M Base">${fmtRs(d.book13)}</td>
+        <td class="num" data-label="13M %">${fmtPct(d.persistency13)}%</td>
+        <td class="num" data-label="13M MTD">${mtdBadge(d.mtdMovement13, false)}</td>
+        <td class="num" data-label="13M Target %">${d.targetPct13 !== null ? fmtPct(d.targetPct13) + '%' : '\u2014'}</td>
+        <td class="num" data-label="13M Target">${fmtRs(d.target13)}</td>
+        <td class="num" data-label="13M MTD Collection">${fmtRs1(d.mtd13)}</td>
+        <td class="num" data-label="25M Base">${fmtRs(d.book25)}</td>
+        <td class="num" data-label="25M %">${fmtPct(d.persistency25)}%</td>
+        <td class="num" data-label="25M MTD">${mtdBadge(d.mtdMovement25, false)}</td>
+        <td class="num" data-label="25M Target %">${d.targetPct25 !== null ? fmtPct(d.targetPct25) + '%' : '\u2014'}</td>
+        <td class="num" data-label="25M Target">${fmtRs(d.target25)}</td>
+        <td class="num" data-label="25M MTD Collection">${fmtRs1(d.mtd25)}</td>
       `;
       tr.addEventListener('click', () => switchTab(name));
       indexBody.appendChild(tr);
@@ -1301,32 +1321,6 @@
     document.getElementById('data-banner').textContent = `✓ Loaded ${Object.keys(newChannels).length} channels from ${sourceLabel}`;
     document.getElementById('data-banner').style.background = '#1E6B3E';
   }
-
-  // ---------- Manual Excel upload ----------
-  // Expects a workbook with sheets "Cases" and "Channel Info" (see the sample template).
-  document.getElementById('excel-upload').addEventListener('change', function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function (evt) {
-      try {
-        const data = new Uint8Array(evt.target.result);
-        const wb = XLSX.read(data, { type: 'array' });
-
-        const casesSheetName = wb.SheetNames.find(n => n.toLowerCase().includes('case')) || wb.SheetNames[0];
-        const infoSheetName = wb.SheetNames.find(n => n.toLowerCase().includes('info')) || wb.SheetNames[1];
-
-        const casesRows = XLSX.utils.sheet_to_json(wb.Sheets[casesSheetName]);
-        const infoRows = infoSheetName ? XLSX.utils.sheet_to_json(wb.Sheets[infoSheetName]) : [];
-
-        applyNewChannels(aggregateFromRows(casesRows, infoRows), file.name);
-      } catch (err) {
-        alert('Could not read this file. ' + err.message);
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  });
 
   // ---------- Google Sheets live-fetch (runs automatically on load, if configured) ----------
   function loadFromGoogleSheets() {
