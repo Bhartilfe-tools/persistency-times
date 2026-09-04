@@ -1216,6 +1216,17 @@
   // ---------- Turn raw case rows + channel info rows into the CHANNELS structure ----------
   // casesRows:  [{ 'Channel Name', 'Bucket (13M/25M)', 'Month (M0-M12)', 'Premium Amount (Rs Crores)', 'Collected (Yes/No)' }, ...]
   // infoRows:   [{ 'Channel Name', '13M Target (Rs Crores)', '13M MTD Collection (Rs Crores)', '25M Target (Rs Crores)', '25M MTD Collection (Rs Crores)', 'Initiatives (separate with ;)' }, ...]
+  // Treats blank, "NA", "N/A", "-" (any case/spacing) as "no data" -> null.
+  // Falls back to null (not NaN) for any other non-numeric text too, so a stray
+  // label can never silently corrupt a downstream sum/average.
+  function parseNumOrNull(val) {
+    if (val === undefined || val === null) return null;
+    const s = String(val).trim();
+    if (s === '' || /^(na|n\/a|-|n\.a\.?)$/i.test(s)) return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  }
+
   function aggregateFromRows(casesRows, infoRows) {
     // tally[channel][bucket][month] = { yesValue, totalValue } — value-wise (premium amount), not case count
     const tally = {};
@@ -1256,14 +1267,14 @@
 
       // Case-insensitive key, so "AGENCY" in this sheet still matches "Agency" in Cases
       infoByChannel[channel.toLowerCase()] = {
-        target13: Number(row['13M Target (Rs Crores)'] || row['13M Target']) || 0,
-        mtd13: Number(row['13M MTD Collection (Rs Crores)'] || row['13M MTD Collection']) || 0,
-        target25: Number(row['25M Target (Rs Crores)'] || row['25M Target']) || 0,
-        mtd25: Number(row['25M MTD Collection (Rs Crores)'] || row['25M MTD Collection']) || 0,
-        bom13: row['13M BOM %'] !== undefined && row['13M BOM %'] !== '' ? Number(row['13M BOM %']) : null,
-        bom25: row['25M BOM %'] !== undefined && row['25M BOM %'] !== '' ? Number(row['25M BOM %']) : null,
-        targetPct13: row['13M Target %'] !== undefined && row['13M Target %'] !== '' ? Number(row['13M Target %']) : null,
-        targetPct25: row['25M Target %'] !== undefined && row['25M Target %'] !== '' ? Number(row['25M Target %']) : null,
+        target13: parseNumOrNull(row['13M Target (Rs Crores)'] ?? row['13M Target']) ?? 0,
+        mtd13: parseNumOrNull(row['13M MTD Collection (Rs Crores)'] ?? row['13M MTD Collection']) ?? 0,
+        target25: parseNumOrNull(row['25M Target (Rs Crores)'] ?? row['25M Target']) ?? 0,
+        mtd25: parseNumOrNull(row['25M MTD Collection (Rs Crores)'] ?? row['25M MTD Collection']) ?? 0,
+        bom13: parseNumOrNull(row['13M BOM %']),
+        bom25: parseNumOrNull(row['25M BOM %']),
+        targetPct13: parseNumOrNull(row['13M Target %']),
+        targetPct25: parseNumOrNull(row['25M Target %']),
         initiatives,
       };
     });
