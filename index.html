@@ -1236,7 +1236,10 @@
       const bucket = String(row['Bucket (13M/25M)'] || row['Bucket'] || '').trim().toUpperCase();
       const month = String(row['Month (M0-M12)'] || row['Month'] || '').trim().toUpperCase();
       const collected = String(row['Collected (Yes/No)'] || row['Collected'] || '').trim().toLowerCase();
-      const amount = Number(row['Premium Amount (Rs Crores)'] || row['Premium Amount'] || row['Amount']) || 0;
+      // Premium Amount is entered as plain Rupees (e.g. 100000) — converted to
+      // Rs Crores automatically here (÷ 1,00,00,000), so no manual conversion
+      // is needed when pasting raw data into the sheet.
+      const amount = (Number(row['Premium Amount (Rs Crores)'] || row['Premium Amount'] || row['Amount']) || 0) / 10000000;
       if (!channel || !bucket || !month) return;
 
       tally[channel] = tally[channel] || {};
