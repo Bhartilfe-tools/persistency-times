@@ -1227,6 +1227,24 @@
     return Number.isFinite(n) ? n : null;
   }
 
+  // Percent columns (13M/25M BOM %, 13M/25M Target %).
+  // Google's CSV export sends the *formatted* cell text, so a percent-formatted
+  // cell arrives as "69.7%" (Number("69.7%") is NaN, which used to silently turn
+  // into "no data"). A plain-number cell arrives as "69.7", and a cell stored as
+  // a raw fraction arrives as "0.697". All three give 69.7 here. Without a "%"
+  // sign, a value between 0 and 1 is read as a fraction, since a real BOM or
+  // target persistency below 1% does not occur. Blank/NA/"-" still mean no data.
+  function parsePctOrNull(val) {
+    if (val === undefined || val === null) return null;
+    let s = String(val).trim();
+    if (s === '' || /^(na|n\/a|-|n\.a\.?)$/i.test(s)) return null;
+    const hasPercentSign = s.includes('%');
+    s = s.replace(/[%\s,]/g, '');
+    const n = Number(s);
+    if (!Number.isFinite(n)) return null;
+    return (!hasPercentSign && n > 0 && n <= 1) ? Math.round(n * 1e6) / 1e4 : n;
+  }
+
   function aggregateFromRows(casesRows, infoRows) {
     // tally[channel][bucket][month] = { yesValue, totalValue } — value-wise (premium amount), not case count
     const tally = {};
@@ -1274,10 +1292,10 @@
         mtd13: parseNumOrNull(row['13M MTD Collection (Rs Crores)'] ?? row['13M MTD Collection']) ?? 0,
         target25: parseNumOrNull(row['25M Target (Rs Crores)'] ?? row['25M Target']) ?? 0,
         mtd25: parseNumOrNull(row['25M MTD Collection (Rs Crores)'] ?? row['25M MTD Collection']) ?? 0,
-        bom13: parseNumOrNull(row['13M BOM %']),
-        bom25: parseNumOrNull(row['25M BOM %']),
-        targetPct13: parseNumOrNull(row['13M Target %']),
-        targetPct25: parseNumOrNull(row['25M Target %']),
+        bom13: parsePctOrNull(row['13M BOM %']),
+        bom25: parsePctOrNull(row['25M BOM %']),
+        targetPct13: parsePctOrNull(row['13M Target %']),
+        targetPct25: parsePctOrNull(row['25M Target %']),
         initiatives,
       };
     });
