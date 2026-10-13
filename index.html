@@ -592,6 +592,40 @@
     letter-spacing: 0.03em;
   }
 
+
+  /* ===== Channel Leaderboard brief (data from Target vs Actual sheet) ===== */
+  .lb-brief { display: none; margin-top: 32px; }
+  .lb-brief .lb-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; align-items: start; }
+  .lb-brief h3 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1.15;
+    margin: 0 0 8px;
+  }
+  .lb-brief .lb-text { font-size: 15.5px; line-height: 1.6; margin: 0 0 10px; }
+  .lb-brief .lb-more {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--red);
+    text-decoration: none;
+    border-bottom: 1px solid var(--red);
+  }
+  .lb-brief table { width: 100%; border-collapse: collapse; font-family: 'Oswald', sans-serif; font-size: 13px; }
+  .lb-brief th {
+    text-align: left; font-weight: 600; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-soft); border-bottom: 2px solid var(--rule); padding: 4px 6px;
+  }
+  .lb-brief td { padding: 6px; border-bottom: 1px solid var(--rule-light); }
+  .lb-brief td.n, .lb-brief th.n { text-align: right; }
+  .lb-brief tr.lb-top td { font-weight: 700; color: var(--red); }
+  .lb-brief .lb-weak { color: var(--ink-soft); font-size: 12px; }
+  .lb-brief .lb-note { font-family: 'Oswald', sans-serif; font-size: 10px; color: var(--ink-soft); margin-top: 6px; }
+  @media (max-width: 900px) { .lb-brief .lb-grid { grid-template-columns: 1fr; } }
+
   @media (max-width: 700px) {
     .overall-group { grid-template-columns: 1fr 1fr; }
     .overall-group-label { grid-column: 1 / -1; }
@@ -729,6 +763,27 @@
     <div class="section-label" style="margin-top:32px;">Overall Initiatives — This Month, Across All Channels</div>
     <div class="section-note">Consolidated from every channel's individual initiatives</div>
     <div id="overall-initiatives"></div>
+
+    <!-- ===== Channel Leaderboard brief (auto, from the Target vs Actual sheet) ===== -->
+    <div class="lb-brief" id="lb-brief">
+      <div class="section-label">From the Target vs Actual Desk &mdash; Channel Leaderboard</div>
+      <div class="section-note" id="lb-note"></div>
+      <div class="lb-grid">
+        <div>
+          <div class="kicker">Who is closest to target</div>
+          <h3 id="lb-headline"></h3>
+          <p class="lb-text" id="lb-text"></p>
+          <a class="lb-more" href="https://bhartilfe-tools.github.io/target-vs-actual/leaderboard.html" target="_blank" rel="noopener">Read the full leaderboard &rarr;</a>
+        </div>
+        <div>
+          <table>
+            <thead><tr><th>#</th><th>Channel</th><th class="n">Score</th><th class="n">On target</th><th>Weakest spot</th></tr></thead>
+            <tbody id="lb-body"></tbody>
+          </table>
+          <div class="lb-note">Score = average achievement vs target across Accrual, Cash (YTD) and 13M&ndash;61M persistency, equal weight. Yodhha &amp; Online not ranked.</div>
+        </div>
+      </div>
+    </div>
 
     <footer>Persistency Times &middot; Internal Use Only &middot; Click a channel tab above for its full editorial report and M0&ndash;M12 rolling record</footer>
   </div>
@@ -1405,5 +1460,45 @@
   loadFromGoogleDriveExcel();
 </script>
 
+
+<!-- Channel Leaderboard brief: shared engine from the Target vs Actual site -->
+<script src="https://bhartilfe-tools.github.io/target-vs-actual/leaderboard-core.js"></script>
+<script>
+(function () {
+  var LB = window.TVALeaderboard;
+  if (!LB) return; // engine not reachable: brief stays hidden, rest of the paper unaffected
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function isBiz(k) { return k === 'Accrual' || k === 'Cash'; }
+  function weakest(r) {
+    var k = LB.PARAMS.filter(function (p) { return r.d[p]; }).sort(function (a, b) { return r.d[a].ach - r.d[b].ach; })[0];
+    if (!k) return null;
+    var x = r.d[k];
+    return { k: k, txt: isBiz(k) ? k + ' ' + x.ach.toFixed(1) + '% of target' : k + ' ' + (x.gap >= 0 ? '+' : '') + x.gap.toFixed(1) + '% vs target' };
+  }
+  LB.load().then(function (R) {
+    var rows = R.rows; if (!rows.length) return;
+    var L = rows[0], R2 = rows[1], last = rows[rows.length - 1];
+    document.getElementById('lb-note').innerHTML = 'Accrual &amp; Cash: YTD ' + esc(R.accFrom) + ' &ndash; ' + esc(R.accTo) + ' &middot; Persistency: ' + esc(R.persMonth) + ' closing &middot; updates automatically each month';
+    document.getElementById('lb-headline').textContent = L.ch + ' leads the board as of ' + R.persMonth;
+    var t = esc(L.ch) + ' tops the channel leaderboard with a score of ' + L.score.toFixed(1);
+    if (R2) t += ', ahead of ' + esc(R2.ch) + ' (' + R2.score.toFixed(1) + ')' + (rows[2] ? ' and ' + esc(rows[2].ch) + ' (' + rows[2].score.toFixed(1) + ')' : '');
+    t += '. It is on target on ' + L.hits + ' of ' + L.n + ' parameters';
+    var w = weakest(L); if (w && L.d[w.k].ach < 100) t += ', with ' + esc(w.txt) + ' its weakest spot';
+    t += '.';
+    if (R2) {
+      var p = LB.pathTo1(R2, L);
+      if (p.ok && p.steps.length) t += ' ' + esc(R2.ch) + ' trails by just ' + (L.score - R2.score).toFixed(1) + ' points &mdash; closing the gap on ' + p.steps.map(function (s) { return s.param; }).join(', ') + ' would take it to the top.';
+    }
+    if (last && last !== L) { var wl = weakest(last); t += ' At the other end, ' + esc(last.ch) + ' sits at ' + last.score.toFixed(1) + (wl ? ', held back by ' + esc(wl.txt) : '') + '.'; }
+    document.getElementById('lb-text').innerHTML = t;
+    document.getElementById('lb-body').innerHTML = rows.map(function (r, i) {
+      var wr = weakest(r);
+      return '<tr class="' + (i ? '' : 'lb-top') + '"><td>' + (i + 1) + '</td><td>' + esc(r.ch) + '</td><td class="n">' + r.score.toFixed(1) +
+        '</td><td class="n">' + r.hits + ' / ' + r.n + '</td><td class="lb-weak">' + (wr ? esc(wr.txt) : '&ndash;') + '</td></tr>';
+    }).join('');
+    document.getElementById('lb-brief').style.display = 'block';
+  }).catch(function (e) { console.warn('Leaderboard brief unavailable:', e); });
+})();
+</script>
 </body>
 </html>
